@@ -16,3 +16,4 @@ LinkingTo:
 Imports: 
     Rcpp
 SystemRequirements: C++11
+BugReports: https://github.com/mrc-ide/PlasmoSim/issues
