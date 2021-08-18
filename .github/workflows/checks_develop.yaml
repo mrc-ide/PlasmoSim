@@ -8,7 +8,7 @@ on:
     branches:
       - develop
 
-name: R-CMD-check
+name: checks_develop
 
 jobs:
   R-CMD-check:
