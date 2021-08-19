@@ -1,6 +1,6 @@
 Package: PlasmoSim
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Simulation of Plasmodium genetic data
 Version: 0.1.0
 Authors@R: as.person(c(
     "Bob Verity <r.verity@imperial.ac.uk> [aut, cre]"
@@ -17,3 +17,6 @@ Imports:
     Rcpp
 SystemRequirements: C++11
 BugReports: https://github.com/mrc-ide/PlasmoSim/issues
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
