@@ -10,20 +10,22 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// square_cpp
-Rcpp::List square_cpp(Rcpp::List args);
-RcppExport SEXP _PlasmoSim_square_cpp(SEXP argsSEXP) {
+// sim_falciparum_cpp
+Rcpp::List sim_falciparum_cpp(Rcpp::List args, Rcpp::List args_functions, Rcpp::List args_progress);
+RcppExport SEXP _PlasmoSim_sim_falciparum_cpp(SEXP argsSEXP, SEXP args_functionsSEXP, SEXP args_progressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type args(argsSEXP);
-    rcpp_result_gen = Rcpp::wrap(square_cpp(args));
+    Rcpp::traits::input_parameter< Rcpp::List >::type args_functions(args_functionsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type args_progress(args_progressSEXP);
+    rcpp_result_gen = Rcpp::wrap(sim_falciparum_cpp(args, args_functions, args_progress));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_PlasmoSim_square_cpp", (DL_FUNC) &_PlasmoSim_square_cpp, 1},
+    {"_PlasmoSim_sim_falciparum_cpp", (DL_FUNC) &_PlasmoSim_sim_falciparum_cpp, 3},
     {NULL, NULL, 0}
 };
 

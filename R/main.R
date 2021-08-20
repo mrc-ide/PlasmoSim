@@ -1,36 +1,3 @@
-#------------------------------------------------
-#' @title Square a vector of values
-#'
-#' @description Simple test function that demonstrates some of the features of
-#'   this package by squaring an input vector of values.
-#'
-#' @param x vector of values.
-#'
-#' @export
-#' @examples
-#' # Find square of first 100 values
-#' square(1:100)
-
-square <- function(x = 1:5) {
-  
-  # print message to console
-  message("running R square function")
-  
-  # get arguments in list form
-  args <- list(x = x)
-  
-  # run C++ function with these arguments
-  output_raw <- square_cpp(args)
-  
-  # some optional processing of output
-  message("processing output")
-  ret <- output_raw$x_squared
-  
-  # return
-  return(ret)
-}
-
-
 
 #------------------------------------------------
 #' @title Simulate genetic data from simple P. falciparum model
@@ -74,7 +41,8 @@ square <- function(x = 1:5) {
 #'   console during simuation.
 #'
 #' @importFrom utils txtProgressBar
-#' @importFrom stats dgeom
+#' @importFrom stats dgeom setNames
+#' @importFrom magrittr %>%
 #' @export
 
 sim_falciparum <- function(a = 0.3,
@@ -96,6 +64,9 @@ sim_falciparum <- function(a = 0.3,
                            time_out = 100,
                            report_progress = TRUE) {
   
+  # avoid no visible binding warning
+  S <- NULL
+  
   # check inputs
   assert_single_bounded(a)
   assert_single_bounded(p)
@@ -109,7 +80,7 @@ sim_falciparum <- function(a = 0.3,
   assert_single_bounded(infectivity)
   assert_single_pos_int(max_infections, zero_allowed = FALSE)
   assert_single_pos_int(H, zero_allowed = FALSE)
-  assert_pos_int(seed_infections, zero_allowed = FALSE)
+  assert_pos_int(seed_infections, zero_allowed = TRUE)
   assert_leq(seed_infections, H)
   assert_pos_int(M, zero_allowed = FALSE)
   assert_same_length(M, seed_infections)
@@ -139,8 +110,14 @@ sim_falciparum <- function(a = 0.3,
   # ---------------------------------------------
   # set up arguments for input into C++
   
+  get_seedsum <- function() {
+    #sum(.Random.seed)
+    .Random.seed[2]
+  }
+  
   # create function list
-  args_functions <- list(update_progress = update_progress)
+  args_functions <- list(update_progress = update_progress,
+                         get_seedsum = get_seedsum)
   
   # create progress bars
   pb <- txtProgressBar(0, max(time_out), initial = NA, style = 3)
@@ -168,4 +145,30 @@ sim_falciparum <- function(a = 0.3,
                time_out = time_out,
                report_progress = report_progress)
   
+  # ---------------------------------------------
+  # run efficient C++ function
+  
+  output_raw <- sim_falciparum_cpp(args, args_functions, args_progress)
+  
+  # ---------------------------------------------
+  # process raw output
+  
+  message("processing output")
+  
+  # get daily values
+  daily_values <- mapply(function(i) {
+    output_raw$daily_values[[i]] %>%
+      rcpp_to_matrix() %>%
+      as.data.frame() %>%
+      setNames(c("S", "E", "I", "Sv", "Ev", "Iv", "EIR")) %>%
+      dplyr::mutate(time = seq_along(S),
+                    deme = i,
+                    .before = 1)
+  }, seq_along(output_raw$daily_values), SIMPLIFY = FALSE) %>%
+    dplyr::bind_rows()
+  
+  # return list
+  ret <- list(daily_values = daily_values,
+              indlevel = -9)
+  return(ret)
 }
