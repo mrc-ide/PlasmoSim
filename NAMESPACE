@@ -2,9 +2,10 @@
 
 export(plasmosim_file)
 export(sim_falciparum)
-export(square)
 importFrom(Rcpp,sourceCpp)
+importFrom(magrittr,"%>%")
 importFrom(stats,dgeom)
+importFrom(stats,setNames)
 importFrom(utils,setTxtProgressBar)
 importFrom(utils,txtProgressBar)
 useDynLib(PlasmoSim, .registration = TRUE)

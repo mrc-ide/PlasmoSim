@@ -14,7 +14,9 @@ RoxygenNote: 7.1.1
 LinkingTo: 
     Rcpp
 Imports: 
-    Rcpp
+    Rcpp,
+    dplyr,
+    magrittr
 SystemRequirements: C++11
 BugReports: https://github.com/mrc-ide/PlasmoSim/issues
 Suggests: 
