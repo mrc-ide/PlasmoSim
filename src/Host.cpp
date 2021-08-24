@@ -34,7 +34,7 @@ void Host::init(int index, int &ID, int deme,
   max_time = param_ptr->max_time;
   u = param_ptr->u;
   g = param_ptr->g;
-  prob_cotransmission = param_ptr->prob_cotransmission;
+  lambda_products = param_ptr->lambda_products;
   
   // draw birth and death days from stable demography distribution
   draw_starting_age();
@@ -65,9 +65,7 @@ void Host::init(int index, int &ID, int deme,
   time_next_event = death_day;
   
   // initiliase haplotypes
-  //haplotypes = vector<vector<vector<int>>>(max_infections);
-  //n_infective_haplotypes = vector<int>(max_infections);
-  //n_infective_haplotypes_total = 0;
+  haplotypes = array_3d_int(max_infections);
   
 }
 
@@ -164,20 +162,18 @@ void Host::death(int &ID, int t) {
   time_next_event = death_day;
   
   // reset haplotypes
-  //haplotypes = vector<vector<vector<int>>>(max_infections);
-  //fill(n_infective_haplotypes.begin(), n_infective_haplotypes.end(), 0);
-  //n_infective_haplotypes_total = 0;
+  haplotypes = array_3d_int(max_infections);
   
 }
 
 //------------------------------------------------
 // de-novo infection
-void Host::denovo_infection() {
+void Host::denovo_infection(int haplo_ID) {
   
   // generating starting genotype in a dummy mosquito
   Mosquito dummy_mosquito;
   dummy_mosquito.init(param_ptr);
-  dummy_mosquito.denovo_infection();
+  dummy_mosquito.denovo_infection(haplo_ID);
   
   // carry out infection
   new_infection(dummy_mosquito, 0);
@@ -226,24 +222,11 @@ void Host::new_infection(Mosquito &mosq, int t) {
     time_next_event = t + u;
   }
   
-  /*
-  // copy over products of recombination. If mosquito holds a single haplotype
-  // then copy this over (clonal expansion). Otherwise copy over potentially
-  // multiple recombinant haplotypes.
-  if (mosq.n_haplotypes == 1) {
-    haplotypes[this_slot].emplace_back(mosq.get_product());
-  } else {
-    double p = 1.0;
-    for (int i = 0; i < 4; ++i) {
-      if (rbernoulli1(p)) {
-        haplotypes[this_slot].emplace_back(mosq.get_product());
-      } else {
-        break;
-      }
-      p *= prob_cotransmission;
-    }
-  }
-  */
+  // draw number of recombinant products
+  int n_products = rztpois1(lambda_products);
+  
+  // copy over products of recombination
+  haplotypes.arr[this_slot] = mosq.get_products(n_products);
   
 }
 
@@ -334,12 +317,7 @@ void Host::begin_infective(int this_slot) {
   n_active_sexual++;
   
   // add to infectives set (will do nothing if already in set)
-  //print(index);
   (*host_infective_index_ptr)[deme].insert(index);
-  
-  // update haplotype counts
-  //n_infective_haplotypes[this_slot] = haplotypes[this_slot].size();
-  //n_infective_haplotypes_total += n_infective_haplotypes[this_slot];
   
 }
 
@@ -363,9 +341,7 @@ void Host::end_infective(int this_slot) {
   }
   
   // clear heplotypes
-  //haplotypes[this_slot].clear();
-  //n_infective_haplotypes_total-= n_infective_haplotypes[this_slot];
-  //n_infective_haplotypes[this_slot] = 0;
+  haplotypes[this_slot].clear();
   
 }
 
@@ -395,4 +371,18 @@ double Host::get_prob_infection() {
   int p = param_ptr->n_prob_infection;
   int i = (cumul_inf > (p - 1)) ? p - 1 : cumul_inf;
   return param_ptr->prob_infection[i];
+}
+
+//------------------------------------------------
+// return array of all haplotypes that correspond to bloodstage infections
+vector<vector<int>> Host::get_bloodstage_haplotypes() {
+  vector<vector<int>> ret;
+  for (int i = 0; i < max_infections; ++i) {
+    if (infection_status_asexual[i] == Bloodstage_asexual) {
+      for (int j = 0; j < haplotypes[i].size(); ++j) {
+        ret.push_back(haplotypes[i][j]);
+      }
+    }
+  }
+  return ret;
 }

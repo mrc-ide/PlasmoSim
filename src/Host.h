@@ -45,7 +45,7 @@ public:
   int max_time;
   int u;
   int g;
-  double prob_cotransmission;
+  double lambda_products;
   
   // dates of birth and death
   int birth_day;
@@ -72,9 +72,8 @@ public:
   int time_next_event;
   
   // haplotypes
-  //std::vector<std::vector<std::vector<int>>> haplotypes;
-  //std::vector<int> n_infective_haplotypes;
-  //int n_infective_haplotypes_total;
+  array_3d_int haplotypes;  // each infection slot can hold multiple haplotypes. Each haplotype is a vector of integers
+  
   
   // PUBLIC FUNCTIONS
   
@@ -91,7 +90,7 @@ public:
   void draw_starting_age();
   void death(int &ID, int t);
   
-  void denovo_infection();
+  void denovo_infection(int haplo_ID);
   void new_infection(Mosquito &mosq, int t);
   void update_events(int &ID, int t);
   void update_time_next_event();
@@ -105,5 +104,6 @@ public:
   int get_n_infections();
   State_host get_host_state();
   double get_prob_infection();
+  std::vector<std::vector<int>> get_bloodstage_haplotypes();
   
 };

@@ -8,19 +8,7 @@ using namespace std;
 //------------------------------------------------
 // simulate from simple individual-based model
 Rcpp::List sim_falciparum_cpp(Rcpp::List args, Rcpp::List args_functions, Rcpp::List args_progress) {
-  /*
-  Rcpp::Function get_seedsum = args_functions["get_seedsum"];
   
-  int reps = 10;
-  vector<int> foo(reps);
-  for (int i = 1; i < reps; ++i) {
-    int z = Rcpp::as<long int>(get_seedsum());
-    print(z);
-    foo[i] = foo[i-1] + rbinom1(2, 0.1);
-  }
-  print_vector(foo);
-  Rcpp::stop("");
-  */
   // start timer
   chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
   
@@ -44,6 +32,7 @@ Rcpp::List sim_falciparum_cpp(Rcpp::List args, Rcpp::List args_functions, Rcpp::
   
   // return list
   return Rcpp::List::create(Rcpp::Named("daily_values") = dispatcher.daily_values.arr,
-                            Rcpp::Named("genotypes") = -9,
-                            Rcpp::Named("indlevel_data") = -9);
+                            Rcpp::Named("sample_IDs") = dispatcher.sample_IDs.arr,
+                            Rcpp::Named("sample_positive") = dispatcher.sample_positive.arr,
+                            Rcpp::Named("sample_haplotypes") = dispatcher.sample_haplotypes.arr);
 }

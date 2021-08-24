@@ -38,6 +38,9 @@ public:
   Sampler sampler_age_death;
   Sampler sampler_duration_infection;
   
+  // ID of next haplotype
+  int next_haplo_ID;
+  
   // counts of host types
   int H_total;
   std::vector<int> Sh;
@@ -77,8 +80,9 @@ public:
   
   // objects for storing results
   array_3d_double daily_values;
-  //array_5d_int genotypes;
-  //array_4d_int indlevel_data;
+  array_3d_int sample_IDs;
+  array_3d_int sample_positive;
+  array_5d_int sample_haplotypes;
   
   // misc
   std::vector<double> EIR;

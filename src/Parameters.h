@@ -14,7 +14,9 @@ public:
   
   // genetic parameters
   int L;
-  double prob_cotransmission;
+  double lambda_oocysts;
+  double lambda_products;
+  double recomb_prob;
   
   // epidemiological parameters
   double a;
@@ -46,10 +48,11 @@ public:
   int n_age;
   
   // run parameters
-  std::vector<int> time_out;
-  int n_time_out;
   int max_time;
   bool report_progress;
+  
+  // sampling parameters
+  std::vector<std::vector<std::pair<int, int>>> sample_list;
   
   // misc parameters
   double prob_v_death;  // daily probability of mosquito death

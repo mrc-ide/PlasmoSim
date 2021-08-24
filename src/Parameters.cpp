@@ -1,6 +1,7 @@
 
 #include "Parameters.h"
 #include "misc_v10.h"
+#include "array.h"
 
 using namespace std;
 
@@ -10,7 +11,9 @@ Parameters::Parameters(const Rcpp::List &args) {
   
   // genetic parameters
   L = rcpp_to_int(args["L"]);
-  prob_cotransmission = rcpp_to_double(args["prob_cotransmission"]);
+  lambda_oocysts = rcpp_to_double(args["lambda_oocysts"]);
+  lambda_products = rcpp_to_double(args["lambda_products"]);
+  recomb_prob = rcpp_to_double(args["recomb_prob"]);
   
   // epidemiological parameters
   a = rcpp_to_double(args["a"]);
@@ -49,10 +52,21 @@ Parameters::Parameters(const Rcpp::List &args) {
   n_age = int(age_stable.size());
   
   // run parameters
-  time_out = rcpp_to_vector_int(args["time_out"]);
-  n_time_out = int(time_out.size());
-  max_time = max(time_out);
+  max_time = rcpp_to_int(args["max_time"]);
   report_progress = rcpp_to_bool(args["report_progress"]);
+  
+  // sampling parameters
+  Rcpp::List sample_dataframe = args["sample_dataframe"];
+  vector<int> sample_df_deme = rcpp_to_vector_int(sample_dataframe["deme"]);
+  vector<int> sample_df_time = rcpp_to_vector_int(sample_dataframe["time"]);
+  vector<int> sample_df_n = rcpp_to_vector_int(sample_dataframe["n"]);
+  sample_list = vector<vector<pair<int, int>>>(max_time);
+  for (int i = 0; i < sample_df_deme.size(); ++i) {
+    int t = sample_df_time[i] - 1;
+    if (t < max_time) {
+      sample_list[t].push_back({sample_df_deme[i], sample_df_n[i]});
+    }
+  }
   
   // misc parameters
   prob_v_death = 1 - exp(-mu);  // daily probability of mosquito death
@@ -62,11 +76,6 @@ Parameters::Parameters(const Rcpp::List &args) {
 //------------------------------------------------
 // print summary
 void Parameters::print_summary() {
-  
-  // genetic parameters
-  print("-- genetic parameters --");
-  print("L: ", L);
-  print("prob_cotransmission: ", prob_cotransmission);
   
   // epidemiological parameters
   print("-- epidemiological parameters --");
@@ -93,6 +102,12 @@ void Parameters::print_summary() {
   print("n_demes: ", n_demes);
   print("");
   
+  // genetic parameters
+  print("-- genetic parameters --");
+  print("L: ", L);
+  print("lambda_oocysts: ", lambda_oocysts);
+  print("lambda_products: ", lambda_products);
+  
   // demography
   print("-- demography --");
   print("life_table: ");
@@ -113,9 +128,6 @@ void Parameters::print_summary() {
   
   // run parameters
   print("-- run parameters --");
-  print("t_out: ");
-  print_vector(time_out);
-  print("n_time_out: ", n_time_out);
   print("max_time: ", max_time);
   print("");
   
