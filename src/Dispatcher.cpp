@@ -30,6 +30,9 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   sampler_age_death = Sampler(param_ptr->age_death, 1000);
   sampler_duration_infection = Sampler(param_ptr->duration_infection, 1000);
   
+  // ID of next haplotype
+  next_haplo_ID = 0;
+  
   // counts of host types
   H_total = n_demes*H;
   Sh = vector<int>(n_demes, H);
@@ -68,7 +71,7 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   // seed initial infections
   for (int k = 0; k < n_demes; ++k) {
     for (int i = 0; i < param_ptr->seed_infections[k]; i++) {
-      host_pop[host_index[k][i]].denovo_infection();
+      host_pop[host_index[k][i]].denovo_infection(next_haplo_ID++);
     }
   }
   
@@ -107,8 +110,9 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   
   // objects for storing results
   daily_values = array_3d_double(n_demes, max_time);
-  //genotypes = array_5d_int(n_demes, param_ptr->n_time_out);
-  //indlevel_data = array_4d_int(n_demes, param_ptr->n_time_out);
+  sample_IDs = array_3d_int(max_time);
+  sample_positive = array_3d_int(max_time);
+  sample_haplotypes = array_5d_int(max_time);
   
   // misc
   EIR = vector<double>(n_demes);
@@ -126,7 +130,6 @@ void Dispatcher::simulate() {
   
   // initialise indices
   int ringtime = 0;
-  int index_time_out = 0;
   
   // loop through daily time steps
   for (int t = 0; t < max_time; ++t) {
@@ -349,37 +352,35 @@ void Dispatcher::simulate() {
                             double(Sv[k]), double(Ev[k]), double(Iv[k]),
                             EIR[k]};
     }
-    /*
-    // if one of output times
-    if ((t + 1) == param_ptr->time_out[index_time_out]) {
+    
+    // individual-based output
+    int n_sample_demes = param_ptr->sample_list[t].size();
+    if (n_sample_demes > 0) {
+      sample_IDs[t] = vector<vector<int>>(n_sample_demes);
+      sample_positive[t] = vector<vector<int>>(n_sample_demes);
+      sample_haplotypes[t] = vector<vector<vector<vector<int>>>>(n_sample_demes);
       
-      // store genotypes and individual-level data
-      for (int i = 0; i < H_total; ++i) {
-        if (host_pop[i].n_infected > 0) {
-          int this_deme = host_pop[i].deme;
-          
-          // store bloodstage genotypes
-          vector<vector<int>> tmp_mat;
-          for (int j = 0; j < param_ptr->max_infections; ++j) {
-            if (host_pop[i].infection_status_asexual[j] == Bloodstage_asexual) {
-              for (unsigned int i2 = 0; i2 < host_pop[i].haplotypes[j].size(); ++i2) {
-                tmp_mat.push_back(host_pop[i].haplotypes[j][i2]);
-              }
-            }
-          }
-          genotypes.arr[this_deme][index_time_out].push_back(tmp_mat);
-          
-          // store individual-level data
-          int this_age = floor((t - host_pop[i].birth_day)/double(365.0));
-          vector<int> tmp_vec = {host_pop[i].ID, host_pop[i].home_deme, this_age, host_pop[i].n_infected};
-          indlevel_data[this_deme][index_time_out].push_back(tmp_vec);
+      for (int i = 0; i < n_sample_demes; ++i) {
+        int this_deme = param_ptr->sample_list[t][i].first - 1;
+        int this_n = param_ptr->sample_list[t][i].second;
+        
+        // sample hosts
+        vector<int> rand_vec = sample4(this_n, 0, H - 1);
+        vector<int> sample_IDs_vec(this_n);
+        vector<int> sample_positive_vec(this_n);
+        array_3d_int sample_haplotypes_vec(this_n);
+        for (int j = 0; j < this_n; ++j) {
+          int this_index = host_index[this_deme][rand_vec[j]];
+          sample_IDs_vec[j] = host_pop[this_index].ID;
+          sample_positive_vec[j] = (host_pop[this_index].get_host_state() == Host_Ih);
+          sample_haplotypes_vec[j] = host_pop[this_index].get_bloodstage_haplotypes();
         }
+        sample_IDs[t][i] = sample_IDs_vec;
+        sample_positive[t][i] = sample_positive_vec;
+        sample_haplotypes[t][i] = sample_haplotypes_vec.arr;
       }
-      
-      // increment output time index
-      index_time_out++;
     }
-    */
+    
   } // end time loop
   
 }

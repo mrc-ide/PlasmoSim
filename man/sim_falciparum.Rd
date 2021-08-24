@@ -11,17 +11,20 @@ sim_falciparum(
   u = 12,
   v = 10,
   g = 10,
-  prob_infection = seq(0.1, 0.01, -0.01),
-  duration_infection = dgeom(1:500, 1/200),
-  infectivity = 1,
+  prob_infection = 0.1,
+  duration_infection = dgeom(1:500, 1/100),
+  infectivity = 0.1,
   max_infections = 5,
   H = 1000,
   seed_infections = 100,
   M = 1000,
   mig_matrix = diag(length(M)),
   L = 24,
-  prob_cotransmission = 0.5,
-  time_out = 100,
+  mean_oocysts = 2,
+  mean_products = 5,
+  recomb_prob = 0.1,
+  max_time = max(sample_dataframe$time),
+  sample_dataframe = data.frame(deme = 1, time = 365, n = 100),
   report_progress = TRUE
 )
 }
@@ -70,10 +73,29 @@ both directions, meaning this matrix must be symmetric.}
 \item{L}{number of loci. The maximum number of loci is 1000, as at higher
 numbers haplotypes begin to exceed integer representation (2^L).}
 
-\item{prob_cotransmission}{probability of mosquito transmitting multiple
-haplotypes to host.}
+\item{mean_oocysts}{the average number of viable oocysts generated from
+gametocytes upon biting an infective host. The actual number of oocysts is
+generated from a zero-truncated Poisson distribution with this mean.}
 
-\item{time_out}{vector of times (days) at which output is produced.}
+\item{mean_products}{parasite genotypes are passed from mosquito to host by
+sampling N times with replacement from the available oocysts products (the
+available number of products is 4 times the number of oocysts). N is drawn
+independently for each infection from a zero-truncated Poisson distribution
+with mean \code{mean_products}. Hence, large values of this parameter
+increase the chance of co-transmission of multiple genotypes, while small
+values increase the chance of picking up just a single genotype.}
+
+\item{recomb_prob}{the probability of a recombination breakpoint between any
+sequential pair of loci. Assumed to be the same for all loci.}
+
+\item{max_time}{run simulation for this many days.}
+
+\item{sample_dataframe}{a dataframe specifying outputs from the model. Must have three columns:
+\enumerate{
+  \item deme: which numbered deme to sample from.
+  \item time: which timepoint (day) to sample from.
+  \item n: number of hosts to randomly sample on this day.
+}}
 
 \item{report_progress}{if \code{TRUE} then a progress bar is printed to the
 console during simuation.}

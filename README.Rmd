@@ -1,0 +1,126 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# PlasmoSim
+
+<!-- badges: start -->
+[![develop checks](https://github.com/mrc-ide/PlasmoSim/workflows/checks_develop/badge.svg)](https://github.com/mrc-ide/PlasmoSim/actions)
+[![master checks](https://github.com/mrc-ide/PlasmoSim/workflows/checks_master/badge.svg)](https://github.com/mrc-ide/PlasmoSim/actions)
+<!-- badges: end -->
+
+PlasmoSim is an R package for simulating both epidemiological and genetic data from a simple model of Plasmodium falciparum transmission. The model itself is fairly lightweight, which speeds up computation times and in turn increases the number of demes (partially isolated sub-populations) that we can simulate. This allows us to explore interesting questions relating to spatial patterns of P. falciparum genetic structure.
+
+## Installation
+
+You can install the development version of PlasmoSim from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("mrc-ide/PlasmoSim")
+```
+
+## Example
+
+```{r, echo=FALSE}
+set.seed(2)
+```
+
+PlasmoSim returns two types of output:
+
+1. Population-level data giving basic epidemiological measures (e.g. prevalence) on each day of simulation
+2. Individual-level data, including parasite genotypes found in the host at specific sampling points
+
+For the latter, we need to define our desired sampling setup using a dataframe. This specifies the demes that we will sample from, at what points in time, and how many random hosts will be drawn from the population:
+
+```{r}
+# define individual-level sampling via a dataframe
+sample_df <- data.frame(deme = 1,
+                        time = 365,
+                        n = 100)
+```
+
+Now we run the main simulation function:
+
+```{r}
+library(PlasmoSim)
+
+# run simulation
+sim1 <- sim_falciparum(H = 1000,                     # human population size
+                       M = 5000,                     # adult female mosquito population size
+                       seed_infections = 100,        # number of infected hosts at time 0
+                       L = 24,                       # number of loci
+                       sample_dataframe = sample_df  # sampling dataframe
+                       )
+```
+
+Daily output is stored in long format, which makes it easy to produce plots:
+
+```{r, message=FALSE}
+# load some extra packages
+library(ggplot2)
+library(dplyr)
+```
+```{r}
+# basic plot of prevalence in "I" state (infected)
+sim1$daily_values %>%
+  ggplot() + theme_bw() +
+  geom_line(aes(x = time, y = 100 * I / 1000, col = as.factor(deme))) +
+  ylab("Prevalence (%)")
+```
+
+Individual-level output is also returned in long format. The first few columns give basic properties of the hosts in our sample:
+
+```{r}
+# take a peek at basic individual-level output, without the haplotypes column
+sim1$indlevel %>%
+  dplyr::select(-haplotypes) %>%
+  head()
+```
+
+The final column in the dataframe is a list of all haplotypes in the hosts. For positive samples there can be a single haplotype or multiple haplotypes if there was either cotransmission or superinfection. Haplotypes are given in rows and loci in columns.
+
+```{r, echo=FALSE}
+# identify polyclonal infections
+n_haps <- mapply(function(x) {
+  if (is.null(x)) return(0)
+  nrow(x)
+}, sim1$indlevel$haplotypes)
+w <- which(n_haps > 1)
+
+# establish if any interesting recombinant haplotypes
+any_recomb <- mapply(function(z) {
+  any(apply(z, 1, function(x) length(unique(x))) > 1)
+}, sim1$indlevel$haplotypes[w])
+
+# ensure not all haplotypes the same
+any_var <- mapply(function(z) {
+  any(apply(z, 2, function(x) length(unique(x))) > 1)
+}, sim1$indlevel$haplotypes[w])
+
+# get index of first haplotype that passes all these checks
+first_interesting_hap <- w[any_recomb & any_var][1]
+```
+
+```{r}
+# view haplotypes found in the 35th sampled individual
+sim1$indlevel$haplotypes[[35]]
+```
+
+The values in the cells are not alleles, but rather give the unique ancestry at that locus. If two haplotypes have the same value at a given locus then they are descended from the same ancestral sequence at some earlier time in the simulation. These ancestry values can easily be converted into allele frequencies by randomly assigning each ancestor to an allele, for example ancestry 91 might correspond to an A allele, and ancestry 51 a B allele.
+
+
+## Example with migration
+
+

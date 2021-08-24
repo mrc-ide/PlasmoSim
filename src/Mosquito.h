@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Parameters.h"
+#include "array.h"
 
 #include <vector>
 
@@ -20,13 +21,15 @@ public:
   // copy over some parameters for convenience
   int L;
   int max_infections;
+  double lambda_oocysts;
+  double recomb_prob;
   
-  // haplotypes
-  //std::vector<int> haplotype1;
-  //std::vector<int> haplotype2;
-  //int n_haplotypes;
-  //std::vector<std::vector<int>> products;
-  //int n_products;
+  // number of oocysts
+  int n_oocyst;
+  
+  // genetic data
+  array_3d_int zygotes;
+  array_3d_int products;
   
   // PUBLIC FUNCTIONS
   
@@ -35,9 +38,10 @@ public:
   
   // methods
   void init(Parameters* param_ptr);
-  void denovo_infection();
-  void new_infection(Host* host_ptr);
   void death();
-  //std::vector<int> get_product();
+  void denovo_infection(int haplo_ID);
+  void new_infection(Host* host_ptr);
+  std::vector<std::vector<int>> get_products(int n_products);
+  std::vector<int> recombine(std::vector<std::vector<int>> &zygote);
   
 };
