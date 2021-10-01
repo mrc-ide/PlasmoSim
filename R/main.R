@@ -194,7 +194,7 @@ sim_falciparum <- function(a = 0.3,
   
   output_raw <- sim_falciparum_cpp(args, args_functions, args_progress)
   
-  
+  #return(output_raw)
   # ---------------------------------------------
   # process raw output
   
@@ -214,14 +214,17 @@ sim_falciparum <- function(a = 0.3,
   
   # process individual-level data
   indlevel <- mapply(function(i) {
-    mapply(function(deme) {
+    mapply(function(j) {
       ret <- data.frame(time = i,
-                        deme = deme,
-                        ID = output_raw$sample_IDs[[i]][[deme]],
-                        positive = output_raw$sample_positive[[i]][[deme]])
+                        deme = output_raw$sample_demes[[i]][j],
+                        ID = output_raw$sample_IDs[[i]][[j]],
+                        positive = output_raw$sample_positive[[i]][[j]])
+      
       ret$haplotypes  <- mapply(function(x) {
         do.call(rbind, x)
-      }, output_raw$sample_haplotypes[[i]][[deme]])
+        unique(do.call(rbind, x))
+      }, output_raw$sample_haplotypes[[i]][[j]])
+      
       return(ret)
     }, seq_along(output_raw$sample_IDs[[i]]), SIMPLIFY = FALSE)
   }, seq_along(output_raw$sample_IDs), SIMPLIFY = FALSE) %>%
@@ -231,4 +234,134 @@ sim_falciparum <- function(a = 0.3,
   ret <- list(daily_values = daily_values,
               indlevel = indlevel)
   return(ret)
+}
+
+#------------------------------------------------
+#' @title Get proportion identical between two haplotype matrices
+#'
+#' @description Compare two sets of haplotypes (matrices), and return the
+#'   proportion of identical sites over all pairwise comparisons. Values can be
+#'   any numeric value; for example if values represent ancestry then this
+#'   function returns the average identity by descent, or if values represent
+#'   alleles then it returns the average identity by state.
+#'
+#' @param mat1,mat2 matrices representing sets of haplotypes to compare.
+#'   Haplotypes are in rows and loci are in columns.
+#'   
+#' @export
+
+get_haplotype_identity <- function(mat1, mat2) {
+  
+  # check inputs
+  assert_matrix_numeric(mat1)
+  assert_matrix_numeric(mat2)
+  assert_eq(ncol(mat1), ncol(mat2), message = "haplotype matrices must have the same number of columns (loci)")
+  
+  # get number of matches and number of comparisons between all pairs of
+  # haplotypes
+  numer <- sum(apply(mat1, 1, function(x) {
+    sum(apply(mat2, 1, function(y) x == y))
+  }))
+  denom <- ncol(mat1)*nrow(mat1)*nrow(mat2)
+  
+  # return proportion identical
+  return(numer / denom)
+}
+
+#------------------------------------------------
+#' @title Get pairwise genetic identity matrix
+#'
+#' @description Calculates pairwise genetic identity between all samples. If
+#'   \code{deme_level = TRUE} this is averaged over all individuals within a
+#'   deme, to produce average pairwise relatedness within and between demes.
+#'   Each time point in the sample is considered independently, and output as a
+#'   list.
+#'
+#' @param sim_output simulation output from \code{sim_falciparum()}.
+#' @param deme_level if \code{TRUE} then return pairwise identity at the deme
+#'   level, averaged over all individuals within each deme. Otherwise return at
+#'   the individual level.
+#'   
+#' @export
+
+get_identity_matrix <- function(sim_output, deme_level = FALSE) {
+  
+  # avoid no visible binding note
+  positive <- deme <- NULL
+  
+  # check inputs
+  assert_list_named(sim_output)
+  assert_in("indlevel", names(sim_output))
+  assert_dataframe(sim_output$indlevel)
+  assert_in(c("time", "deme", "ID", "positive", "haplotypes"), names(sim_output$indlevel))
+  assert_vector_pos_int(sim_output$indlevel$time)
+  assert_vector_pos_int(sim_output$indlevel$deme)
+  assert_vector_pos_int(sim_output$indlevel$ID)
+  assert_vector_pos_int(sim_output$indlevel$positive)
+  assert_leq(sim_output$indlevel$positive, 1)
+  assert_list(sim_output$indlevel$haplotypes)
+  
+  # split individual-level output by sampling time
+  tsplit <- split(sim_output$indlevel, f = sim_output$indlevel$time)
+  
+  # loop over sampling times
+  indlevel_list <- mapply(function(x) {
+    
+    # subset to positives
+    x <- subset(x, positive == 1)
+    if (nrow(x) == 0) {
+      return(NULL)
+    }
+    
+    # get identity in all pairwise comparisons
+    ret_mat <- mapply(function(i) {
+      mapply(function(j) {
+        get_haplotype_identity(x$haplotypes[[i]], x$haplotypes[[j]])
+      }, seq_along(x$haplotypes))
+    }, seq_along(x$haplotypes))
+    
+    # set row and column names
+    colnames(ret_mat) <-  rownames(ret_mat) <- x$ID
+    
+    ret_mat
+  }, tsplit, SIMPLIFY = FALSE)
+  
+  # if not summarising at deme level then return as is
+  if (!deme_level) {
+    return(indlevel_list)
+  }
+  
+  # produce pairwise matrix summarised at deme level
+  demelevel_list <- mapply(function(t_i) {
+    
+    # subset to positives
+    x <- subset(tsplit[[t_i]], positive == 1)
+    if (nrow(x) == 0) {
+      return(NULL)
+    }
+    
+    # get dataframe of demes and IDs
+    deme_IDs <- subset(x, select = c("deme", "ID"))
+    
+    # get unique demes
+    u <- unique(x$deme)
+    
+    # get pairwise similarity averaged over all individuals within a deme
+    ret_mat <- mapply(function(i) {
+      mapply(function(j) {
+        IDs_i <- subset(deme_IDs, deme == u[i])$ID
+        IDs_j <- subset(deme_IDs, deme == u[j])$ID
+        w1 <- match(IDs_i, as.numeric(colnames(indlevel_list[[t_i]])))
+        w2 <- match(IDs_j, as.numeric(colnames(indlevel_list[[t_i]])))
+        mean(indlevel_list[[t_i]][w1, w2])
+      }, seq_along(u))
+    }, seq_along(u))
+    
+    # set row and column names
+    colnames(ret_mat) <-  rownames(ret_mat) <- u
+    
+    ret_mat
+  }, seq_along(tsplit), SIMPLIFY = FALSE)
+  
+  return(demelevel_list)
 }

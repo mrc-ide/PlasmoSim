@@ -80,6 +80,7 @@ public:
   
   // objects for storing results
   array_3d_double daily_values;
+  array_2d_int sample_demes;
   array_3d_int sample_IDs;
   array_3d_int sample_positive;
   array_5d_int sample_haplotypes;
