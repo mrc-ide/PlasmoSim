@@ -110,6 +110,7 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   
   // objects for storing results
   daily_values = array_3d_double(n_demes, max_time);
+  sample_demes = array_2d_int(max_time);
   sample_IDs = array_3d_int(max_time);
   sample_positive = array_3d_int(max_time);
   sample_haplotypes = array_5d_int(max_time);
@@ -363,6 +364,7 @@ void Dispatcher::simulate() {
       for (int i = 0; i < n_sample_demes; ++i) {
         int this_deme = param_ptr->sample_list[t][i].first - 1;
         int this_n = param_ptr->sample_list[t][i].second;
+        sample_demes[t].push_back(this_deme + 1);
         
         // sample hosts
         vector<int> rand_vec = sample4(this_n, 0, H - 1);

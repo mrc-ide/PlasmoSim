@@ -72,11 +72,12 @@ Daily output is stored in long format, which makes it easy to produce plots:
 library(ggplot2)
 library(dplyr)
 ```
-```{r}
+
+```{r, out.width="70%", out.height="70%"}
 # basic plot of prevalence in "I" state (infected)
 sim1$daily_values %>%
   ggplot() + theme_bw() +
-  geom_line(aes(x = time, y = 100 * I / 1000, col = as.factor(deme))) +
+  geom_line(aes(x = time, y = 100 * I / 1000)) +
   ylab("Prevalence (%)")
 ```
 
@@ -123,4 +124,170 @@ The values in the cells are not alleles, but rather give the unique ancestry at 
 
 ## Example with migration
 
+PlasmoSim incorporates migration of hosts between demes using a migration matrix. We have to be careful when simulating stochastic movement of people between demes, as if we simply give each person a random chance of moving from one deme to another taken from this migration matrix then deme population sizes will drift up and down at random and eventually we will see demes emptying entirely. To get around this we do matched migration, meaning people swap places between demes rather than moving independently. This satisfies the migration matrix, while also ensuring that population sizes stay constant throughout the simulation. We do not model mosquito movement in this version of the package.
 
+We start by creating a grid of demes, and for each deme specifying its properties, such as the mosquito population size and the number of seeding infections. In our case we will make the density of mosquitoes (and hence the EIR) increase from left to right of the domain. Note that human population sizes must be the same for all demes due to the migration constraint described above. We will start by seeding infections in just one deme in the lower left corner:
+
+```{r}
+# define x- and y-locations of demes
+demes_x <- seq(0, 100, 10)
+demes_y <- seq(0, 100, 10)
+
+# get coordinates into dataframe
+deme_df <- expand.grid(demes_x, demes_y)
+names(deme_df) <- c("x", "y")
+
+# add deme-specific properties
+deme_df <- deme_df %>%
+  dplyr::mutate(deme = seq_len(nrow(deme_df)),
+                M = 500 + x, # mosquito population size increasing from left to right
+                seed_infections = ifelse(x == 0 & y == 0, 50, 0))
+
+head(deme_df)
+```
+
+Next we need to make a migration matrix. We first calculate the distance between all demes, and then we will create a small amount of migration between adjacent demes only. The migration matrix must sum to one over rows to be accepted by the program:
+
+```{r}
+# define migration matrix based on distance
+d <- deme_df %>%
+  dplyr::select(x, y) %>%
+  dist() %>%
+  as.matrix()
+mig_matrix <- 0.01 * (d <= 10)
+
+# ensure migration probabilities sum to 1 over rows
+diag(mig_matrix) <- 0
+diag(mig_matrix) <- 1 - rowSums(mig_matrix)
+```
+
+Next we need to define our sampling strategy. We will sample 100 individuals from a subset of demes after a full 10 years of simulation (genetic patterns take a long time to settle down, much longer than prevalence for example). For convenience we produce the sampling dataframe directly from the `deme_df` dataframe defined above, although only the columns `deme`, `time` and `n` will be used sampling.
+
+```{r}
+# define output dataframe
+sample_df <- deme_df %>%
+  dplyr::filter(deme %in% c(13, 26, 35, 109)) %>%
+  dplyr::mutate(time = 30 * 365,
+                n = 100)
+
+sample_df
+```
+
+Now we can run the simulation, using the values in `deme_df` to specify the mosquito population size and the seeding infections:
+
+```{r}
+# simulate
+set.seed(1)
+sim_mig <- sim_falciparum(H = 100,
+                          M = deme_df$M,
+                          seed_infections = deme_df$seed_infections,
+                          mig_matrix = mig_matrix,
+                          L = 24,
+                          sample_dataframe = sample_df)
+```
+
+As before, we can produce a simple plot of prevalence over time, now broken down by deme. We can see how the wave of infection swept through the demes as infected hosts migrated through the space:
+
+```{r, out.width="70%", out.height="70%"}
+# basic plot of prevalence in "I" state (infected)
+sim_mig$daily_values %>%
+  dplyr::filter(time < 365 * 10) %>%
+  ggplot() + theme_bw() +
+  geom_line(aes(x = time, y = 100 * I / 100, col = as.factor(deme)), show.legend = FALSE) +
+  ylab("Prevalence (%)")
+```
+
+We can visualise this spatially by filtering to a certain timepoint and then producing a raster plot. For example, here is the prevalence map 5 years into the simulation:
+
+```{r, out.width="70%", out.height="70%"}
+# subset daily output to specific timepoint and merge back with deme properties
+daily_values_sub <- sim_mig$daily_values %>%
+  dplyr::filter(time == 5*365) %>%
+  dplyr::left_join(deme_df, by = "deme")
+
+# produce raster plot
+daily_values_sub %>%
+  ggplot() + theme_bw() +
+  geom_raster(aes(x = x, y = y, fill = I)) +
+  scale_fill_viridis_c(option = "magma", name = "Prevalence (%)")
+```
+
+We can see that five years into our simulation the wave of infection had still not quite reached the top-right corner of our domain. Prevalence also appears to be higher towards the right of the domain, a consequence of assuming increasing mosquito population size from left to right. We can produce the same plot at 30 years into simulation:
+
+```{r, out.width="70%", out.height="70%"}
+# subset daily output to specific timepoint and merge back with deme properties
+daily_values_sub <- sim_mig$daily_values %>%
+  dplyr::filter(time == 30*365) %>%
+  dplyr::left_join(deme_df, by = "deme")
+
+# produce raster plot
+daily_values_sub %>%
+  ggplot() + theme_bw() +
+  geom_raster(aes(x = x, y = y, fill = I)) +
+  scale_fill_viridis_c(option = "magma", name = "Prevalence (%)")
+```
+
+Now prevalence appears to be roughly at equilibrium, with higher transmission uniformly along the right of the domain.
+
+Returning to our genetic sample, we asked the program to draw 100 individuals at random from four demes on the final day of simulation. We can calculate the pairwise genetic identity between all pairs of individuals in this sample using the \code{get_identity_matrix()} function. Genetic identity is calculated as the proportion of identical genetic values over all possible pairs of haplotypes compared between two individuals. This means two individuals will only have identity = 1 if they are monoclonal and matching at every locus. It follows that an individual will be less than perfectly identical to itself if it carries multiple distinct haplotypes. As long as genetic values represent ancestry, as they do in this simulation, what we are really measuring here is average identity by descent (IBD) between haplotypes. If genetic values were converted into alleles prior to running this function then we would be measuring identity by state (IBS).
+
+```{r, out.width="70%", out.height="70%"}
+# get pairwise genetic identity between all individuals
+indlevel_identity <- get_identity_matrix(sim_mig)
+
+# get into long form dataframe
+n_pos <- nrow(indlevel_identity[[1]])
+df_indlevel_identity <- expand.grid(1:n_pos, 1:n_pos)
+df_indlevel_identity$value <- as.vector(indlevel_identity[[1]])
+
+# plot pairwise matrix
+ggplot(df_indlevel_identity) + theme_void() +
+  geom_raster(aes(x = Var1, y = Var2, fill = value)) +
+  scale_fill_viridis_c(option = "magma", name = "Identity by descent")
+```
+
+We can also use the same function to summarise genetic identity at the deme level rather than the individual level through the `deme_level = TRUE` argument:
+
+```{r, out.width="40%", out.height="40%", fig.width=4, fig.height=2.5}
+# get pairwise genetic identity between all demes
+demelevel_identity <- get_identity_matrix(sim_mig, deme_level = TRUE)
+
+# get into long form dataframe
+n_deme <- nrow(demelevel_identity[[1]])
+df_demelevel_identity <- expand.grid(deme1 = sample_df$deme, deme2 = sample_df$deme)
+df_demelevel_identity$IBD <- as.vector(demelevel_identity[[1]])
+
+# plot pairwise matrix
+ggplot(df_demelevel_identity) + theme_bw() +
+  geom_raster(aes(x = as.factor(deme1), y = as.factor(deme2), fill = IBD)) +
+  xlab("deme1") + ylab("deme2") +
+  scale_fill_viridis_c(option = "magma", name = "Identity by descent")
+```
+
+We can see that some demes are more closely related than others. We can visualise this spatially by drawing edges between our sampled demes, with edge thickness/colour proportional to IBD:
+
+```{r, out.width="70%", out.height="70%"}
+# append deme coordinates
+sample_df_simple <- sample_df %>%
+  dplyr::select(x, y, deme)
+
+df_demelevel_identity <- df_demelevel_identity %>%
+  dplyr::rename(deme = deme1) %>%
+  dplyr::left_join(sample_df_simple, by = "deme") %>%
+  dplyr::rename(deme1 = deme,
+                deme = deme2) %>%
+  dplyr::left_join(sample_df_simple, by = "deme") %>%
+  dplyr::rename(deme2 = deme)
+
+# plot pairwise IBD
+df_demelevel_identity %>%
+  dplyr::filter(deme1 != deme2) %>%
+  ggplot() + theme_bw() +
+  geom_segment(aes(x = x.x, y = y.x, xend = x.y, yend = y.y, size = IBD, col = IBD),
+               lineend = "round") +
+  xlim(c(0, 100)) + ylim(c(0, 100)) +
+  xlab("x") + ylab("y") +
+  guides(size = "none")
+```
+
+On average we would expect to see thaht demes closer together would be more highly related, although this will also be influenced in complex ways by relative transmission intensity.
