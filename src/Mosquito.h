@@ -27,8 +27,16 @@ public:
   // number of oocysts
   int n_oocyst;
   
-  // genetic data
+  // store zygote parental genotypes. Number of elements is equal to the number
+  // of oocysts, and contains a matrix with one row if clonal or two rows
+  // (representing two parents) if not clonal.
   array_3d_int zygotes;
+  
+  // store recombinant genotype products. Number of elements is equal to the
+  // number of oocysts, and contains a matrix with four rows corrseponding to
+  // the four recombinant products. These are created on-the-fly as they are
+  // needed, and so are sometimes left empty. For example, if parents are clonal
+  // there is no need to generate these products.
   array_3d_int products;
   
   // PUBLIC FUNCTIONS

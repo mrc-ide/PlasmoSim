@@ -24,7 +24,8 @@
 #'   infective human host.
 #' @param max_infections maximum number of infections that an individual
 #'   can hold simultaneously.
-#' @param H human population size, which is assumed the same in every deme.
+#' @param H human population size, which is assumed to be the same in every
+#'   deme.
 #' @param seed_infections vector specifying the initial number of infected
 #'   humans in each deme.
 #' @param M vector specifying mosquito population size (strictly the number of
@@ -41,17 +42,19 @@
 #'   sampling N times with replacement from the available oocysts products (the
 #'   available number of products is 4 times the number of oocysts). N is drawn
 #'   independently for each infection from a zero-truncated Poisson distribution
-#'   with mean \code{mean_products}. Hence, large values of this parameter
-#'   increase the chance of co-transmission of multiple genotypes, while small
-#'   values increase the chance of picking up just a single genotype.
+#'   with mean given by \code{mean_products}. Hence, large values of this
+#'   parameter increase the chance of co-transmission of multiple genotypes,
+#'   while small values increase the chance of picking up just a single
+#'   genotype.
 #' @param recomb_prob the probability of a recombination breakpoint between any
 #'   sequential pair of loci. Assumed to be the same for all loci.
-#' @param max_time run simulation for this many days.
-#' @param sample_dataframe a dataframe specifying outputs from the model. Must have three columns:
+#' @param max_time number of days in the simulation.
+#' @param sample_dataframe a dataframe specifying outputs from the model. Must
+#'   contain the following three columns:
 #'   \enumerate{
-#'     \item deme: which numbered deme to sample from.
-#'     \item time: which timepoint (day) to sample from.
-#'     \item n: number of hosts to randomly sample on this day.
+#'     \item \code{deme}: which numbered deme to sample from.
+#'     \item \code{time}: the day on which samples are taken.
+#'     \item \code{n}: the number of hosts to randomly sample from the population.
 #'   }
 #' @param report_progress if \code{TRUE} then a progress bar is printed to the
 #'   console during simuation.
