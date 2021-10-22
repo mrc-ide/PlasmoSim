@@ -24,6 +24,9 @@ public:
   double lambda_oocysts;
   double recomb_prob;
   
+  // parental infection IDs
+  std::vector<int> parent_infection_IDs;
+  
   // number of oocysts
   int n_oocyst;
   

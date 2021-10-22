@@ -48,6 +48,7 @@ void Host::init(int index, int &ID, int deme,
   cumul_inf = 0;
   
   // initialise infection objects
+  infection_IDs = vector<int>(max_infections);
   infection_active = vector<bool>(max_infections, false);
   infection_status_asexual = vector<Status_asexual>(max_infections, Inactive_asexual);
   infection_status_sexual = vector<Status_sexual>(max_infections, Inactive_sexual);
@@ -168,20 +169,23 @@ void Host::death(int &ID, int t) {
 
 //------------------------------------------------
 // de-novo infection
-void Host::denovo_infection(int haplo_ID) {
+void Host::denovo_infection(int &infection_ID, int &haplo_ID, std::map<int, std::vector<int>> &infection_map) {
   
-  // generating starting genotype in a dummy mosquito
+  // generate starting genotype in a dummy mosquito
   Mosquito dummy_mosquito;
   dummy_mosquito.init(param_ptr);
   dummy_mosquito.denovo_infection(haplo_ID);
   
   // carry out infection
-  new_infection(dummy_mosquito, 0);
+  new_infection(infection_ID, dummy_mosquito, 0, infection_map);
+  
+  // increment haplo_ID
+  haplo_ID++;
 }
 
 //------------------------------------------------
 // new infection
-void Host::new_infection(Mosquito &mosq, int t) {
+void Host::new_infection(int &infection_ID, Mosquito &mosq, int t, std::map<int, std::vector<int>> &infection_map) {
   
   // update cumulative infections irrespective of whether infection takes hold
   cumul_inf++;
@@ -210,12 +214,19 @@ void Host::new_infection(Mosquito &mosq, int t) {
   int duration_infection = sampler_duration_infection_ptr->draw() + 1;
   
   // add new infection
+  infection_IDs[this_slot] = infection_ID;
   infection_active[this_slot] = true;
   infection_status_asexual[this_slot] = Liverstage_asexual;
   time_Eh_to_Ih[this_slot] = t + u;                               // begin bloodstage
   time_Ih_to_Sh[this_slot] = t + u + duration_infection;          // end bloodstage
   time_begin_infective[this_slot] = t + u + g;                    // begin infective
   time_end_infective[this_slot] = t + u + g + duration_infection; // end bloodstage
+  
+  // store in infection map
+  infection_map[infection_ID] = mosq.parent_infection_IDs;
+  
+  // increment infection_ID
+  infection_ID++;
   
   // update time of next event
   if ((t + u) < time_next_event) {
@@ -343,6 +354,18 @@ void Host::end_infective(int this_slot) {
   // clear heplotypes
   haplotypes[this_slot].clear();
   
+}
+
+//------------------------------------------------
+// get vector of infection IDs for all infections in active sexual stage
+vector<int> Host::get_infective_IDs() {
+  vector<int> ret;
+  for (int i = 0; i < max_infections; ++i) {
+    if (infection_status_sexual[i] == Active_sexual) {
+      ret.push_back(infection_IDs[i]);
+    }
+  }
+  return ret;
 }
 
 //------------------------------------------------

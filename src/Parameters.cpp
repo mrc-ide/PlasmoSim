@@ -55,7 +55,10 @@ Parameters::Parameters(const Rcpp::List &args) {
   max_time = rcpp_to_int(args["max_time"]);
   report_progress = rcpp_to_bool(args["report_progress"]);
   
-  // sampling parameters
+  // sampling parameters. sample_list contains a vector of pairs for each day of
+  // simulation. The vector is over all demes that need to be sampled on this
+  // day, and the pair gives the index of the deme and the number of hosts to
+  // sample.
   Rcpp::List sample_dataframe = args["sample_dataframe"];
   vector<int> sample_df_deme = rcpp_to_vector_int(sample_dataframe["deme"]);
   vector<int> sample_df_time = rcpp_to_vector_int(sample_dataframe["time"]);

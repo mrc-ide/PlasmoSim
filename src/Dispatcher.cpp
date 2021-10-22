@@ -30,7 +30,8 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   sampler_age_death = Sampler(param_ptr->age_death, 1000);
   sampler_duration_infection = Sampler(param_ptr->duration_infection, 1000);
   
-  // ID of next haplotype
+  // ID of next infection and next haplotype
+  next_infection_ID = 0;
   next_haplo_ID = 0;
   
   // counts of host types
@@ -71,7 +72,7 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   // seed initial infections
   for (int k = 0; k < n_demes; ++k) {
     for (int i = 0; i < param_ptr->seed_infections[k]; i++) {
-      host_pop[host_index[k][i]].denovo_infection(next_haplo_ID++);
+      host_pop[host_index[k][i]].denovo_infection(next_infection_ID, next_haplo_ID, infection_map);
     }
   }
   
@@ -110,10 +111,6 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   
   // objects for storing results
   daily_values = array_3d_double(n_demes, max_time);
-  sample_demes = array_2d_int(max_time);
-  sample_IDs = array_3d_int(max_time);
-  sample_positive = array_3d_int(max_time);
-  sample_haplotypes = array_5d_int(max_time);
   
   // misc
   EIR = vector<double>(n_demes);
@@ -129,8 +126,11 @@ void Dispatcher::simulate() {
     print("Running simulation");
   }
   
-  // initialise indices
+  // initialise ring buffer over extrinsic incubation period
   int ringtime = 0;
+  
+  // index for looping through sample output
+  int sample_i = 0;
   
   // loop through daily time steps
   for (int t = 0; t < max_time; ++t) {
@@ -310,7 +310,7 @@ void Dispatcher::simulate() {
             // infect from random mosquito
             int rnd2 = sample2(0, Iv[k] - 1);
             int this_mosq = Iv_index[k][rnd2];
-            host_pop[this_host].new_infection(mosq_pop[this_mosq], t);
+            host_pop[this_host].new_infection(next_infection_ID, mosq_pop[this_mosq], t, infection_map);
           }
           
         }  // end loop through infectious bites
@@ -354,35 +354,44 @@ void Dispatcher::simulate() {
                             EIR[k]};
     }
     
-    // individual-based output
+    // store individual-based output
     int n_sample_demes = param_ptr->sample_list[t].size();
     if (n_sample_demes > 0) {
-      sample_IDs[t] = vector<vector<int>>(n_sample_demes);
-      sample_positive[t] = vector<vector<int>>(n_sample_demes);
-      sample_haplotypes[t] = vector<vector<vector<vector<int>>>>(n_sample_demes);
       
       for (int i = 0; i < n_sample_demes; ++i) {
         int this_deme = param_ptr->sample_list[t][i].first - 1;
         int this_n = param_ptr->sample_list[t][i].second;
-        sample_demes[t].push_back(this_deme + 1);
+        //sample_demes[t].push_back(this_deme + 1);
         
         // sample hosts
         vector<int> rand_vec = sample4(this_n, 0, H - 1);
-        vector<int> sample_IDs_vec(this_n);
-        vector<int> sample_positive_vec(this_n);
-        array_3d_int sample_haplotypes_vec(this_n);
         for (int j = 0; j < this_n; ++j) {
           int this_index = host_index[this_deme][rand_vec[j]];
-          sample_IDs_vec[j] = host_pop[this_index].ID;
-          sample_positive_vec[j] = (host_pop[this_index].get_host_state() == Host_Ih);
-          sample_haplotypes_vec[j] = host_pop[this_index].get_bloodstage_haplotypes();
+          
+          Rcpp::List this_sample;
+          this_sample["t"] = t + 1;
+          this_sample["deme"] = this_deme + 1;
+          this_sample["sample_ID"] = host_pop[this_index].ID;
+          this_sample["positive"] = (host_pop[this_index].get_host_state() == Host_Ih);
+          this_sample["haplotypes"] = host_pop[this_index].get_bloodstage_haplotypes();
+          
+          sample_output.push_back(this_sample);
         }
-        sample_IDs[t][i] = sample_IDs_vec;
-        sample_positive[t][i] = sample_positive_vec;
-        sample_haplotypes[t][i] = sample_haplotypes_vec.arr;
       }
     }
     
   } // end time loop
   
+}
+
+//------------------------------------------------
+// print infection pedigree map
+void Dispatcher::print_infection_map() {
+  for(auto it = infection_map.cbegin(); it != infection_map.cend(); ++it) {
+    Rcpp::Rcout << it->first << ": " << it->second[0];
+    for (int i = 1; i < it->second.size(); ++i) {
+      Rcpp::Rcout << ", " << it->second[i];
+    }
+    Rcpp::Rcout << "\n";
+  }
 }

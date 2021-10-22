@@ -215,23 +215,25 @@ sim_falciparum <- function(a = 0.3,
   }, seq_along(output_raw$daily_values), SIMPLIFY = FALSE) %>%
     dplyr::bind_rows()
   
-  # process individual-level data
-  indlevel <- mapply(function(i) {
-    mapply(function(j) {
-      ret <- data.frame(time = i,
-                        deme = output_raw$sample_demes[[i]][j],
-                        ID = output_raw$sample_IDs[[i]][[j]],
-                        positive = output_raw$sample_positive[[i]][[j]])
-      
-      ret$haplotypes  <- mapply(function(x) {
-        do.call(rbind, x)
-        unique(do.call(rbind, x))
-      }, output_raw$sample_haplotypes[[i]][[j]])
-      
-      return(ret)
-    }, seq_along(output_raw$sample_IDs[[i]]), SIMPLIFY = FALSE)
-  }, seq_along(output_raw$sample_IDs), SIMPLIFY = FALSE) %>%
+  # process basic individual-level data
+  indlevel <- mapply(function(x) {
+    data.frame(time = x$t,
+               deme = x$deme,
+               sample_ID = x$sample_ID,
+               positive = x$positive)
+  }, output_raw$sample_output, SIMPLIFY = FALSE) %>%
     dplyr::bind_rows()
+  
+  # append haplotypes as list
+  indlevel$haplotypes <- mapply(function(x) {
+    l <- length(x$haplotypes)
+    if (l > 0) {
+      ret <- matrix(unlist(x$haplotypes), nrow = l)
+    } else {
+      ret <- NULL
+    }
+    return(ret)
+  }, output_raw$sample_output)
   
   # return list
   ret <- list(daily_values = daily_values,
@@ -296,12 +298,11 @@ get_identity_matrix <- function(sim_output, deme_level = FALSE) {
   assert_list_named(sim_output)
   assert_in("indlevel", names(sim_output))
   assert_dataframe(sim_output$indlevel)
-  assert_in(c("time", "deme", "ID", "positive", "haplotypes"), names(sim_output$indlevel))
+  assert_in(c("time", "deme", "sample_ID", "positive", "haplotypes"), names(sim_output$indlevel))
   assert_vector_pos_int(sim_output$indlevel$time)
   assert_vector_pos_int(sim_output$indlevel$deme)
-  assert_vector_pos_int(sim_output$indlevel$ID)
-  assert_vector_pos_int(sim_output$indlevel$positive)
-  assert_leq(sim_output$indlevel$positive, 1)
+  assert_vector_pos_int(sim_output$indlevel$sample_ID)
+  assert_vector_logical(sim_output$indlevel$positive)
   assert_list(sim_output$indlevel$haplotypes)
   
   # split individual-level output by sampling time
@@ -324,7 +325,7 @@ get_identity_matrix <- function(sim_output, deme_level = FALSE) {
     }, seq_along(x$haplotypes))
     
     # set row and column names
-    colnames(ret_mat) <-  rownames(ret_mat) <- x$ID
+    colnames(ret_mat) <-  rownames(ret_mat) <- x$sample_ID
     
     ret_mat
   }, tsplit, SIMPLIFY = FALSE)
@@ -344,7 +345,7 @@ get_identity_matrix <- function(sim_output, deme_level = FALSE) {
     }
     
     # get dataframe of demes and IDs
-    deme_IDs <- subset(x, select = c("deme", "ID"))
+    deme_IDs <- subset(x, select = c("deme", "sample_ID"))
     
     # get unique demes
     u <- unique(x$deme)
@@ -352,8 +353,8 @@ get_identity_matrix <- function(sim_output, deme_level = FALSE) {
     # get pairwise similarity averaged over all individuals within a deme
     ret_mat <- mapply(function(i) {
       mapply(function(j) {
-        IDs_i <- subset(deme_IDs, deme == u[i])$ID
-        IDs_j <- subset(deme_IDs, deme == u[j])$ID
+        IDs_i <- subset(deme_IDs, deme == u[i])$sample_ID
+        IDs_j <- subset(deme_IDs, deme == u[j])$sample_ID
         w1 <- match(IDs_i, as.numeric(colnames(indlevel_list[[t_i]])))
         w2 <- match(IDs_j, as.numeric(colnames(indlevel_list[[t_i]])))
         mean(indlevel_list[[t_i]][w1, w2])

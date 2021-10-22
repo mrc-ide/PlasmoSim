@@ -38,6 +38,9 @@ void Mosquito::death() {
 // initialise genetic data de novo
 void Mosquito::denovo_infection(int haplo_ID) {
   
+  // infection has no parent
+  parent_infection_IDs = {-1};
+  
   // initialise with single unique clonal zygote
   n_oocyst = 1;
   zygotes.arr.emplace_back(vector<vector<int>>(1, vector<int>(L, haplo_ID)));
@@ -52,6 +55,9 @@ void Mosquito::new_infection(Host* host_ptr) {
   if (n_oocyst != 0) {
     Rcpp::stop("new infection on mosquito with n_oocyst != 0");
   }
+  
+  // copy over parental infection IDs
+  parent_infection_IDs = host_ptr->get_infective_IDs();
   
   // draw number of oocysts
   n_oocyst = rztpois1(lambda_oocysts);
