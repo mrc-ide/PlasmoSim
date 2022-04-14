@@ -15,7 +15,7 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   update_progress_ptr = &update_progress;
   args_progress_ptr = &args_progress;
   
-  // make local copies of some parameters
+  // make local copies of some parameters for convenience
   n_demes = param_ptr->n_demes;
   max_time = param_ptr->max_time;
   a = param_ptr->a;
@@ -30,11 +30,11 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   sampler_age_death = Sampler(param_ptr->age_death, 1000);
   sampler_duration_infection = Sampler(param_ptr->duration_infection, 1000);
   
-  // ID of next infection and next haplotype
+  // ID of next infection and next haplotype. Initialise at 0
   next_infection_ID = 0;
   next_haplo_ID = 0;
   
-  // counts of host types
+  // counts of host types. Start with H susceptibles in each deme
   H_total = n_demes*H;
   Sh = vector<int>(n_demes, H);
   Eh = vector<int>(n_demes);
@@ -72,7 +72,7 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   // seed initial infections
   for (int k = 0; k < n_demes; ++k) {
     for (int i = 0; i < param_ptr->seed_infections[k]; i++) {
-      host_pop[host_index[k][i]].denovo_infection(next_infection_ID, next_haplo_ID, infection_map);
+      host_pop[host_index[k][i]].denovo_infection(next_haplo_ID);
     }
   }
   
@@ -128,9 +128,6 @@ void Dispatcher::simulate() {
   
   // initialise ring buffer over extrinsic incubation period
   int ringtime = 0;
-  
-  // index for looping through sample output
-  int sample_i = 0;
   
   // loop through daily time steps
   for (int t = 0; t < max_time; ++t) {
@@ -310,7 +307,7 @@ void Dispatcher::simulate() {
             // infect from random mosquito
             int rnd2 = sample2(0, Iv[k] - 1);
             int this_mosq = Iv_index[k][rnd2];
-            host_pop[this_host].new_infection(next_infection_ID, mosq_pop[this_mosq], t, infection_map);
+            host_pop[this_host].new_infection(mosq_pop[this_mosq], t);
           }
           
         }  // end loop through infectious bites
@@ -355,15 +352,14 @@ void Dispatcher::simulate() {
     }
     
     // store individual-based output
-    int n_sample_demes = param_ptr->sample_list[t].size();
+    int n_sample_demes = param_ptr->sample_list[t].size(); // number of demes to be sampled in this timestep
     if (n_sample_demes > 0) {
       
       for (int i = 0; i < n_sample_demes; ++i) {
         int this_deme = param_ptr->sample_list[t][i].first - 1;
         int this_n = param_ptr->sample_list[t][i].second;
-        //sample_demes[t].push_back(this_deme + 1);
         
-        // sample hosts
+        // sample hosts from this deme
         vector<int> rand_vec = sample4(this_n, 0, H - 1);
         for (int j = 0; j < this_n; ++j) {
           int this_index = host_index[this_deme][rand_vec[j]];
@@ -384,14 +380,3 @@ void Dispatcher::simulate() {
   
 }
 
-//------------------------------------------------
-// print infection pedigree map
-void Dispatcher::print_infection_map() {
-  for(auto it = infection_map.cbegin(); it != infection_map.cend(); ++it) {
-    Rcpp::Rcout << it->first << ": " << it->second[0];
-    for (int i = 1; i < it->second.size(); ++i) {
-      Rcpp::Rcout << ", " << it->second[i];
-    }
-    Rcpp::Rcout << "\n";
-  }
-}

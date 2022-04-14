@@ -3,7 +3,7 @@
 
 #include "Parameters.h"
 #include "Mosquito.h"
-//#include "array.h"
+#include "array.h"
 #include "Sampler_v4.h"
 
 #include <vector>
@@ -56,7 +56,6 @@ public:
   int cumul_inf;
   
   // infection-level objects
-  std::vector<int> infection_IDs;
   std::vector<bool> infection_active;
   std::vector<Status_asexual> infection_status_asexual;
   std::vector<Status_sexual> infection_status_sexual;
@@ -92,8 +91,8 @@ public:
   void draw_starting_age();
   void death(int &ID, int t);
   
-  void denovo_infection(int &infection_ID, int &haplo_ID, std::map<int, std::vector<int>> &infection_map);
-  void new_infection(int &infection_ID, Mosquito &mosq, int t, std::map<int, std::vector<int>> &infection_map);
+  void denovo_infection(int &haplo_ID);
+  void new_infection(Mosquito &mosq, int t);
   void update_events(int &ID, int t);
   void update_time_next_event();
   
@@ -103,7 +102,6 @@ public:
   void end_infective(int this_slot);
   
   // getters and setters
-  std::vector<int> get_infective_IDs();
   int get_n_infections();
   State_host get_host_state();
   double get_prob_infection();
