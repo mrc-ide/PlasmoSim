@@ -2,7 +2,7 @@
 #pragma once
 
 #include "Parameters.h"
-#include "array.h"
+#include "array_v1.h"
 
 #include <vector>
 

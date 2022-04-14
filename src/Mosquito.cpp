@@ -1,8 +1,8 @@
 
 #include "Mosquito.h"
 #include "Host.h"
-#include "probability_v11.h"
-#include "misc_v10.h"
+#include "probability_v17.h"
+#include "misc_v14.h"
 
 using namespace std;
 
