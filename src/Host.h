@@ -86,8 +86,10 @@ public:
   void draw_starting_age();
   void death(int &ID, int t);
   
-  void denovo_infection(int &haplo_ID);
+  void denovo_infection(int &haplo_ID, int n_haplos, int t);
   void new_infection(Mosquito &mosq, int t);
+  int update_infection_slots(int t);
+  void update_haplotypes_from_mosquito(int this_slot, Mosquito &mosq);
   void update_events(int &ID, int t);
   void update_time_next_event();
   

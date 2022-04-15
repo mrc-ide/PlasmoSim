@@ -160,31 +160,43 @@ void Host::death(int &ID, int t) {
 
 //------------------------------------------------
 // de-novo infection
-void Host::denovo_infection(int &haplo_ID) {
+void Host::denovo_infection(int &haplo_ID, int n_haplos, int t) {
   
-  // generate starting genotype in a dummy mosquito
-  Mosquito dummy_mosquito;
-  dummy_mosquito.init(param_ptr);
-  dummy_mosquito.denovo_infection(haplo_ID);
+  // find next infection slot and apply changes to represent new infection
+  int this_slot = update_infection_slots(t);
   
-  // carry out infection
-  new_infection(dummy_mosquito, 0);
+  // give each haplotype a unique ID
+  haplotypes.arr[this_slot] = vector<vector<int>>(n_haplos);
+  for (int i = 0; i < n_haplos; ++i) {
+    haplotypes.arr[this_slot][i] = vector<int>(L, haplo_ID);
+    haplo_ID++;
+  }
   
-  // increment haplo_ID
-  haplo_ID++;
 }
 
 //------------------------------------------------
-// new infection
+// new infection from mosquito
 void Host::new_infection(Mosquito &mosq, int t) {
-  
-  // update cumulative infections irrespective of whether infection takes hold
-  cumul_inf++;
   
   // return if already at max_infections
   if (get_n_infections() == max_infections) {
     return;
   }
+  
+  // find next infection slot and apply changes to represent new infection
+  int this_slot = update_infection_slots(t);
+  
+  // get haplotypes from mosquito
+  update_haplotypes_from_mosquito(this_slot, mosq);
+  
+}
+
+//------------------------------------------------
+// update infection slots to represent new infection. Return the chosen slot
+int Host::update_infection_slots(int t) {
+  
+  // update cumulative infections
+  cumul_inf++;
   
   // get next free infection slot
   int this_slot = get_free_infection_slot();
@@ -204,6 +216,13 @@ void Host::new_infection(Mosquito &mosq, int t) {
   if ((t + u) < time_next_event) {
     time_next_event = t + u;
   }
+  
+  return this_slot;
+}
+
+//------------------------------------------------
+// update haplotypes array by drawing recombinant products from mosquito
+void Host::update_haplotypes_from_mosquito(int this_slot, Mosquito &mosq) {
   
   // draw number of recombinant products obtained from mosquito
   int n_products = rztpois1(lambda_products);
