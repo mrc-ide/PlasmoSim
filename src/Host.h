@@ -64,11 +64,6 @@ public:
   std::vector<int> time_begin_infective;
   std::vector<int> time_end_infective;
   
-  // counts of the number of infections in each stage
-  int n_liverstage_asexual;
-  int n_bloodstage_asexual;
-  int n_active_sexual;
-  
   // time of next event
   int time_next_event;
   
@@ -101,8 +96,14 @@ public:
   void begin_infective(int this_slot);
   void end_infective(int this_slot);
   
+  int draw_active_slot();
+  
   // getters and setters
+  int get_free_infection_slot();
   int get_n_infections();
+  int get_n_liverstage_asexual();
+  int get_n_bloodstage_asexual();
+  int get_n_active_sexual();
   State_host get_host_state();
   double get_prob_infection();
   std::vector<std::vector<int>> get_bloodstage_haplotypes();

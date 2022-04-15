@@ -60,7 +60,7 @@ void Mosquito::new_infection(Host* host_ptr) {
   
   // special case: if host carries a single haplotype then all oocysts will be
   // identical, therefore may as well only initialise one
-  if (host_ptr->n_active_sexual == 1) {
+  if (host_ptr->get_n_active_sexual() == 1) {
     for (int j = 0; j < max_infections; ++j) {
       if (host_ptr->infection_active[j]) {
         if (host_ptr->haplotypes[j].size() == 1) {
@@ -78,30 +78,8 @@ void Mosquito::new_infection(Host* host_ptr) {
   for (int i = 0; i < n_oocyst; ++i) {
     
     // choose infection slots
-    int slot1 = 0;
-    int slot2 = 0;
-    int n = sample2(1, host_ptr->n_active_sexual);
-    for (int j = 0; j < max_infections; ++j) {
-      n -= host_ptr->infection_active[j];
-      if (n == 0) {
-        slot1 = j;
-        break;
-      }
-    }
-    if (n != 0) {
-      Rcpp::stop("error in Mosquito::new_infection()");
-    }
-    n = sample2(1, host_ptr->n_active_sexual);
-    for (int j = 0; j < max_infections; ++j) {
-      n -= host_ptr->infection_active[j];
-      if (n == 0) {
-        slot2 = j;
-        break;
-      }
-    }
-    if (n != 0) {
-      Rcpp::stop("error in Mosquito::new_infection()");
-    }
+    int slot1 = host_ptr->draw_active_slot();
+    int slot2 = host_ptr->draw_active_slot();
     
     // choose haplotypes within slots
     int hap1 = sample2(0, host_ptr->haplotypes[slot1].size() - 1);

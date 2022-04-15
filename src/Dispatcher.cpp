@@ -182,11 +182,11 @@ void Dispatcher::simulate() {
           host_index[deme2][rnd2] = index1;
           
           // move infectives as needed
-          if (host_pop[index1].n_active_sexual > 0) {
+          if (host_pop[index1].get_n_active_sexual() > 0) {
             host_infective_index[deme1].erase(index1);
             host_infective_index[deme2].insert(index1);
           }
-          if (host_pop[index2].n_active_sexual > 0) {
+          if (host_pop[index2].get_n_active_sexual() > 0) {
             host_infective_index[deme2].erase(index2);
             host_infective_index[deme1].insert(index2);
           }
