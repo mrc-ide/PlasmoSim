@@ -262,7 +262,7 @@ sim_falciparum <- function(a = 0.3,
 #'
 #' @description Compare two sets of haplotypes (matrices), and return the
 #'   proportion of identical sites over all pairwise comparisons. Values can be
-#'   any numeric value; for example if values represent ancestry then this
+#'   any numeric value; for example, if values represent ancestry then this
 #'   function returns the average identity by descent, or if values represent
 #'   alleles then it returns the average identity by state.
 #'
