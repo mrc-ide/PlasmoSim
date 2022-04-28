@@ -62,6 +62,7 @@
 #' @importFrom utils txtProgressBar
 #' @importFrom stats dgeom setNames optim
 #' @importFrom magrittr %>%
+#' @importFrom rlang .data
 #' @export
 
 sim_falciparum <- function(a = 0.3,
@@ -234,6 +235,21 @@ sim_falciparum <- function(a = 0.3,
     }
     return(ret)
   }, output_raw$sample_output)
+  
+  # get unique hash of each haplotype
+  indlevel$haplo_ID <- mapply(function(x) {
+    if (is.null(x)) {
+      ret <- NULL
+    } else {
+      haplo_string <- paste(x, collapse = ".")
+      ret <- openssl::md5(haplo_string)
+    }
+    return(ret)
+  }, indlevel$haplotypes)
+  
+  # reorder columns
+  indlevel <- indlevel %>% 
+    dplyr::relocate(.data$haplo_ID, .before = .data$haplotypes)
   
   # return list
   ret <- list(daily_values = daily_values,

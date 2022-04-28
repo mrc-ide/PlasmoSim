@@ -1,7 +1,7 @@
 #include "main.h"
 #include "Parameters.h"
 #include "Dispatcher.h"
-#include "probability_v11.h"
+#include "probability_v17.h"
 
 using namespace std;
 
@@ -33,9 +33,5 @@ Rcpp::List sim_falciparum_cpp(Rcpp::List args, Rcpp::List args_functions, Rcpp::
   
   // return list
   return Rcpp::List::create(Rcpp::Named("daily_values") = dispatcher.daily_values.arr,
-                            //Rcpp::Named("sample_demes") = dispatcher.sample_demes.arr,
-                            //Rcpp::Named("sample_IDs") = dispatcher.sample_IDs.arr,
-                            //Rcpp::Named("sample_positive") = dispatcher.sample_positive.arr,
-                            //Rcpp::Named("sample_haplotypes") = dispatcher.sample_haplotypes.arr,
                             Rcpp::Named("sample_output") = dispatcher.sample_output);
 }
