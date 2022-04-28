@@ -89,7 +89,7 @@ sim_falciparum <- function(a = 0.3,
   
   # avoid no visible binding warning
   S <- NULL
-  
+  # comment
   # check inputs
   assert_single_bounded(a)
   assert_single_bounded(p)
