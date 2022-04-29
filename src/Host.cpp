@@ -210,7 +210,7 @@ int Host::update_infection_slots(int t) {
   time_Eh_to_Ih[this_slot] = t + u;                               // begin bloodstage
   time_Ih_to_Sh[this_slot] = t + u + duration_infection;          // end bloodstage
   time_begin_infective[this_slot] = t + u + g;                    // begin infective
-  time_end_infective[this_slot] = t + u + g + duration_infection; // end bloodstage
+  time_end_infective[this_slot] = t + u + g + duration_infection; // end infective
   
   // update time of next event
   if ((t + u) < time_next_event) {

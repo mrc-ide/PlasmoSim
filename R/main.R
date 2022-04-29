@@ -77,6 +77,7 @@ sim_falciparum <- function(a = 0.3,
                            max_infections = 5,
                            H = 1000,
                            seed_infections = 100,
+#                           seed_vec = sample.int(5, 100),
                            M = 1000,
                            mig_matrix = diag(length(M)),
                            L = 24,
@@ -89,7 +90,7 @@ sim_falciparum <- function(a = 0.3,
   
   # avoid no visible binding warning
   S <- NULL
-  # comment
+
   # check inputs
   assert_single_bounded(a)
   assert_single_bounded(p)
