@@ -164,8 +164,8 @@ void Host::denovo_infection(int &haplo_ID, int n_haplos, int t) {
   
   // find next infection slot and apply changes to represent new infection
   int this_slot = update_infection_slots(t);
-  
-  // give each haplotype a unique ID
+    
+  // give each haplotype a unique I
   haplotypes.arr[this_slot] = vector<vector<int>>(n_haplos);
   for (int i = 0; i < n_haplos; ++i) {
     haplotypes.arr[this_slot][i] = vector<int>(L, haplo_ID);

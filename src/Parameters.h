@@ -32,6 +32,7 @@ public:
   // deme parameters
   int H;
   std::vector<int> seed_infections;
+  std::vector<int> seed_vec;
   std::vector<int> M_vec;
   int n_demes;
   

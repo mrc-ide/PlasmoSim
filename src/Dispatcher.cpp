@@ -24,7 +24,7 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   H = param_ptr->H;
   infectivity = param_ptr->infectivity;
   mu = param_ptr->mu;
-  
+
   // objects for sampling from probability distributions
   sampler_age_stable = Sampler(param_ptr->age_stable, 1000);
   sampler_age_death = Sampler(param_ptr->age_death, 1000);
@@ -71,10 +71,14 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   
   // seed initial infections
   for (int k = 0; k < n_demes; ++k) {
+    // note: will poss need to pass in a list (in R) of vectors and in C a vector of vectors
     for (int i = 0; i < param_ptr->seed_infections[k]; i++) {
-      host_pop[host_index[k][i]].denovo_infection(next_haplo_ID, 4, 0);
+      host_pop[host_index[k][i]].denovo_infection(next_haplo_ID, param_ptr->seed_vec[i], 0);
     }
   }
+  
+//  print_vector(param_ptr->seed_vec);
+//  Rcpp::stop("debug2");
   
   // vector for randomly changing the order in which migration is applied
   mig_order = seq_int(0, parameters.n_mig_list - 1);

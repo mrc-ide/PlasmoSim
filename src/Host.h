@@ -70,7 +70,6 @@ public:
   // haplotypes
   array_3d_int haplotypes;  // each infection slot can hold multiple haplotypes. Each haplotype is a vector of integers
   
-  
   // PUBLIC FUNCTIONS
   
   // constructors

@@ -4,7 +4,7 @@
 #include "probability_v17.h"
 
 using namespace std;
-
+//
 //------------------------------------------------
 // simulate from simple individual-based model
 Rcpp::List sim_falciparum_cpp(Rcpp::List args, Rcpp::List args_functions, Rcpp::List args_progress) {
@@ -33,5 +33,12 @@ Rcpp::List sim_falciparum_cpp(Rcpp::List args, Rcpp::List args_functions, Rcpp::
   
   // return list
   return Rcpp::List::create(Rcpp::Named("daily_values") = dispatcher.daily_values.arr,
-                            Rcpp::Named("sample_output") = dispatcher.sample_output);
+                            Rcpp::Named("sample_output") = dispatcher.sample_output,
+                            Rcpp::Named("final_haplos") = dispatcher.next_haplo_ID,
+                            Rcpp::Named("seed_vec") = parameters.seed_vec,
+                            Rcpp::Named("seed_infections") = parameters.seed_infections);
 }
+
+// useful debugging code
+// print_vector(x);
+// Rcpp::stop("debug");

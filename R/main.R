@@ -77,7 +77,7 @@ sim_falciparum <- function(a = 0.3,
                            max_infections = 5,
                            H = 1000,
                            seed_infections = 100,
-#                           seed_vec = sample.int(5, 100),
+                           seed_vec = sample.int(5, 100, replace = TRUE),
                            M = 1000,
                            mig_matrix = diag(length(M)),
                            L = 24,
@@ -106,6 +106,7 @@ sim_falciparum <- function(a = 0.3,
   assert_single_pos_int(H, zero_allowed = FALSE)
   assert_pos_int(seed_infections, zero_allowed = TRUE)
   assert_leq(seed_infections, H)
+  assert_vector_pos(seed_vec, zero_allowed = FALSE)
   assert_pos_int(M, zero_allowed = FALSE)
   assert_same_length(M, seed_infections)
   n_demes <- length(M)
@@ -181,6 +182,7 @@ sim_falciparum <- function(a = 0.3,
                max_infections = max_infections,
                H = H,
                seed_infections = seed_infections,
+               seed_vec = seed_vec,
                M = M,
                mig_matrix = matrix_to_rcpp(mig_matrix),
                L = L,
@@ -230,7 +232,7 @@ sim_falciparum <- function(a = 0.3,
   indlevel$haplotypes <- mapply(function(x) {
     l <- length(x$haplotypes)
     if (l > 0) {
-      ret <- matrix(unlist(x$haplotypes), nrow = l)
+      ret <- matrix(unlist(x$haplotypes), nrow = l, byrow = TRUE)
     } else {
       ret <- NULL
     }
@@ -254,7 +256,12 @@ sim_falciparum <- function(a = 0.3,
   
   # return list
   ret <- list(daily_values = daily_values,
-              indlevel = indlevel)
+              indlevel = indlevel,
+              final_haplos = output_raw$final_haplos,
+              seed_vec = output_raw$seed_vec,
+              seed_vec_sum = sum(output_raw$seed_vec),
+              seed_infections = output_raw$seed_infections)
+  
   return(ret)
 }
 

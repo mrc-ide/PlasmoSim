@@ -29,6 +29,7 @@ Parameters::Parameters(const Rcpp::List &args) {
   // deme parameters
   H = rcpp_to_int(args["H"]);
   seed_infections = rcpp_to_vector_int(args["seed_infections"]);
+  seed_vec = rcpp_to_vector_int(args["seed_vec"]);
   M_vec = rcpp_to_vector_int(args["M"]);
   n_demes = int(M_vec.size());
   
