@@ -71,7 +71,6 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   
   // seed initial infections
   for (int k = 0; k < n_demes; ++k) {
-    // note: will poss need to pass in a list (in R) of vectors and in C a vector of vectors
     for (int i = 0; i < param_ptr->seed_infections[k]; i++) {
       host_pop[host_index[k][i]].denovo_infection(next_haplo_ID, param_ptr->seed_vec[i], 0);
     }

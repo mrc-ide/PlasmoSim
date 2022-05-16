@@ -33,6 +33,7 @@ public:
   int H;
   double infectivity;
   double mu;
+  Rcpp::List seed_list;
   
   // objects for sampling from probability distributions
   Sampler sampler_age_stable;

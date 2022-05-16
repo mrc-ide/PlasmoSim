@@ -33,6 +33,7 @@ public:
   int H;
   std::vector<int> seed_infections;
   std::vector<int> seed_vec;
+  Rcpp::List seed_list;
   std::vector<int> M_vec;
   int n_demes;
   
