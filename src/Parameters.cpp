@@ -31,6 +31,9 @@ Parameters::Parameters(const Rcpp::List &args) {
   seed_infections = rcpp_to_vector_int(args["seed_infections"]);
   seed_vec = rcpp_to_vector_int(args["seed_vec"]);
   Rcpp::List seed_list = args["seed_list"];
+  vector<int> test1 = rcpp_to_vector_int(seed_list["first"]);
+  print_vector(test1);
+//  Rcpp::stop("debug_list");
   M_vec = rcpp_to_vector_int(args["M"]);
   n_demes = int(M_vec.size());
   
