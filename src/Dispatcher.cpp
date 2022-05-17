@@ -69,15 +69,29 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
     }
   }
   
-  // seed initial infections
+  //seed initial infections
+//  for (int k = 0; k < n_demes; ++k) {
+//    for (int i = 0; i < param_ptr->seed_infections[k]; i++) {
+//      host_pop[host_index[k][i]].denovo_infection(next_haplo_ID, param_ptr->seed_vec[i], 0);
+//    }
+//  }
+
+  seed_list_subset = vector<int>(0);
+  
   for (int k = 0; k < n_demes; ++k) {
-    for (int i = 0; i < param_ptr->seed_infections[k]; i++) {
-      host_pop[host_index[k][i]].denovo_infection(next_haplo_ID, param_ptr->seed_vec[i], 0);
-    }
+    //seed_list_subset = rcpp_to_vector_int(seed_list[[k]]); // CAUSES ABORT
+    print(k);
+//    print(seed_list[k]);
+    Rcpp::stop("debug1");
+    
+//    print_vector(rcpp_to_vector_int(seed_list[k]));
+//    for (int i = 0; i < param_ptr->seed_infections[k]; i++) {
+//      host_pop[host_index[k][i]].denovo_infection(next_haplo_ID,seed_list_subset[i],0);
+//    }
   }
   
-//  print_vector(param_ptr->seed_vec);
-//  Rcpp::stop("debug2");
+  print_vector(seed_list_subset);
+  Rcpp::stop("debug2");
   
   // vector for randomly changing the order in which migration is applied
   mig_order = seq_int(0, parameters.n_mig_list - 1);
