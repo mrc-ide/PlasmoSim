@@ -191,7 +191,8 @@ sim_falciparum <- function(a = 0.3,
                age_stable = mali_demog$age_stable,
                max_time = max_time,
                sample_dataframe = sample_dataframe,
-               report_progress = report_progress)
+               report_progress = report_progress,
+               test_list = list(v1 = 1:5, v2 = 6:10))
   
   # ---------------------------------------------
   # run efficient C++ function

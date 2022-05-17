@@ -9,6 +9,14 @@ using namespace std;
 // simulate from simple individual-based model
 Rcpp::List sim_falciparum_cpp(Rcpp::List args, Rcpp::List args_functions, Rcpp::List args_progress) {
   
+  // TODO - delete
+  Rcpp::List test_list = args["test_list"];
+  vector<int> tmp1 = test_list[0];
+  vector<int> tmp2 = test_list[1];
+  print_vector(tmp1);
+  print_vector(tmp2);
+  Rcpp::stop("foo1");
+  
   // start timer
   chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
   
