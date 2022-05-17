@@ -33,7 +33,7 @@ Parameters::Parameters(const Rcpp::List &args) {
   Rcpp::List seed_list = args["seed_list"];
   vector<int> test1 = rcpp_to_vector_int(seed_list["first"]);
   print_vector(test1);
-  Rcpp::stop("debug_list");
+//  Rcpp::stop("debug_list");
   M_vec = rcpp_to_vector_int(args["M"]);
   n_demes = int(M_vec.size());
   
