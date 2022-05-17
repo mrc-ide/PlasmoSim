@@ -34,9 +34,7 @@ Rcpp::List sim_falciparum_cpp(Rcpp::List args, Rcpp::List args_functions, Rcpp::
   // return list
   return Rcpp::List::create(Rcpp::Named("daily_values") = dispatcher.daily_values.arr,
                             Rcpp::Named("sample_output") = dispatcher.sample_output,
-                            Rcpp::Named("final_haplos") = dispatcher.next_haplo_ID,
-                            Rcpp::Named("seed_vec") = parameters.seed_vec,
-                            Rcpp::Named("seed_infections") = parameters.seed_infections);
+                            Rcpp::Named("final_haplos") = dispatcher.next_haplo_ID);
   
 }
 

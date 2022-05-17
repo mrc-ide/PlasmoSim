@@ -263,11 +263,7 @@ sim_falciparum <- function(a = 0.3,
   # return list
   ret <- list(daily_values = daily_values,
               indlevel = indlevel,
-              final_haplos = output_raw$final_haplos,
-              seed_vec = output_raw$seed_vec,
-              seed_vec_sum = sum(output_raw$seed_vec),
-              seed_infections = output_raw$seed_infections,
-              seed_list = output_raw$seed_list)
+              final_haplos = output_raw$final_haplos)
   
   return(ret)
 }
