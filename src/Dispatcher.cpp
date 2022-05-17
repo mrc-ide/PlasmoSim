@@ -15,6 +15,11 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   update_progress_ptr = &update_progress;
   args_progress_ptr = &args_progress;
   
+  // TODO - remove
+  vector<int> test1 = rcpp_to_vector_int(param_ptr->seed_list[0]);
+  print_vector(test1);
+  Rcpp::stop("foo1");
+  
   // make local copies of some parameters for convenience
   n_demes = param_ptr->n_demes;
   max_time = param_ptr->max_time;
