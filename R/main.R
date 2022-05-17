@@ -77,7 +77,6 @@ sim_falciparum <- function(a = 0.3,
                            max_infections = 5,
                            H = 1000,
                            seed_infections = 100,
-                           seed_vec = sample.int(5, seed_infections, replace = TRUE),
                            seed_list = lapply(seed_infections,sample.int,n=5,replace=TRUE),
                            M = 1000,
                            mig_matrix = diag(length(M)),
@@ -107,7 +106,6 @@ sim_falciparum <- function(a = 0.3,
   assert_single_pos_int(H, zero_allowed = FALSE)
   assert_pos_int(seed_infections, zero_allowed = TRUE)
   assert_leq(seed_infections, H)
-  assert_vector_pos(seed_vec, zero_allowed = FALSE)
   assert_list(seed_list)
   assert_eq(lengths(seed_list),seed_infections)
   assert_pos(unlist(seed_list), zero_allowed = TRUE)
@@ -187,7 +185,6 @@ sim_falciparum <- function(a = 0.3,
                max_infections = max_infections,
                H = H,
                seed_infections = seed_infections,
-               seed_vec = seed_vec,
                seed_list = seed_list,
                M = M,
                mig_matrix = matrix_to_rcpp(mig_matrix),
