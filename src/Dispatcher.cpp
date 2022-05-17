@@ -70,28 +70,30 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   }
   
   //seed initial infections
-//  for (int k = 0; k < n_demes; ++k) {
-//    for (int i = 0; i < param_ptr->seed_infections[k]; i++) {
-//      host_pop[host_index[k][i]].denovo_infection(next_haplo_ID, param_ptr->seed_vec[i], 0);
-//    }
-//  }
-
-  seed_list_subset = vector<int>(0);
-  
   for (int k = 0; k < n_demes; ++k) {
-    //seed_list_subset = rcpp_to_vector_int(seed_list[[k]]); // CAUSES ABORT
-    print(k);
-//    print(seed_list[k]);
-    Rcpp::stop("debug1");
-    
-//    print_vector(rcpp_to_vector_int(seed_list[k]));
+    for (int i = 0; i < param_ptr->seed_infections[k]; i++) {
+      host_pop[host_index[k][i]].denovo_infection(next_haplo_ID, param_ptr->seed_vec[i], 0);
+    }
+  }
+  // This works and produces seed infections across two demes of the number we assign in seed_infections
+  // e.g. seed_infections = (3,2) and seed_vec randomly (as default) = (1,4,1) this produces
+  // first deme: host1 = 1 infection 0, host2 = 4 infections 1,2,3,4, host3 = 1 infection 5
+  // second deme: host1 = 1 infecton 6, host2 = 4 infections 7,8,9,10
+  
+  // This is trying to use the list and causes an abort. Changes are:
+  // 1. In the loop instruction ++k to k++
+  // 2. Creating vector for each list element
+  // 3. Updating this vector as the input for the inner loop (replacing seed_vec[i])
+  
+//  for (int k = 0; k < n_demes; k++) {
+//    vector<int> seed_list_subset = seed_list[k];       // When isolating this line for debugging it compiles but an error is returned "Object creates without any names"
 //    for (int i = 0; i < param_ptr->seed_infections[k]; i++) {
 //      host_pop[host_index[k][i]].denovo_infection(next_haplo_ID,seed_list_subset[i],0);
 //    }
-  }
+//  }
   
-  print_vector(seed_list_subset);
-  Rcpp::stop("debug2");
+//  print_vector(seed_list_subset);
+//  Rcpp::stop("debug");
   
   // vector for randomly changing the order in which migration is applied
   mig_order = seq_int(0, parameters.n_mig_list - 1);
