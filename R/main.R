@@ -229,7 +229,7 @@ sim_falciparum <- function(a = 0.3,
   indlevel$haplotypes <- mapply(function(x) {
     l <- length(x$haplotypes)
     if (l > 0) {
-      ret <- matrix(unlist(x$haplotypes), nrow = l)
+      ret <- matrix(unlist(x$haplotypes), nrow = l, byrow = TRUE)
     } else {
       ret <- NULL
     }
@@ -241,8 +241,7 @@ sim_falciparum <- function(a = 0.3,
     if (is.null(x)) {
       ret <- NULL
     } else {
-      haplo_string <- paste(x, collapse = ".")
-      ret <- openssl::md5(haplo_string)
+      ret <- apply(x, 1, function(s) openssl::md5(paste(s, collapse = ".")))
     }
     return(ret)
   }, indlevel$haplotypes)
