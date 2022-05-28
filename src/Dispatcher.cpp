@@ -1,6 +1,6 @@
 
 #include "Dispatcher.h"
-#include "probability_v11.h"
+#include "probability_v17.h"
 
 #include <tuple>
 
@@ -15,7 +15,7 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   update_progress_ptr = &update_progress;
   args_progress_ptr = &args_progress;
   
-  // make local copies of some parameters
+  // make local copies of some parameters for convenience
   n_demes = param_ptr->n_demes;
   max_time = param_ptr->max_time;
   a = param_ptr->a;
@@ -30,10 +30,11 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   sampler_age_death = Sampler(param_ptr->age_death, 1000);
   sampler_duration_infection = Sampler(param_ptr->duration_infection, 1000);
   
-  // ID of next haplotype
+  // ID of next infection and next haplotype. Initialise at 0
+  next_infection_ID = 0;
   next_haplo_ID = 0;
   
-  // counts of host types
+  // counts of host types. Start with H susceptibles in each deme
   H_total = n_demes*H;
   Sh = vector<int>(n_demes, H);
   Eh = vector<int>(n_demes);
@@ -71,7 +72,7 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   // seed initial infections
   for (int k = 0; k < n_demes; ++k) {
     for (int i = 0; i < param_ptr->seed_infections[k]; i++) {
-      host_pop[host_index[k][i]].denovo_infection(next_haplo_ID++);
+      host_pop[host_index[k][i]].denovo_infection(next_haplo_ID, 1, 0);
     }
   }
   
@@ -110,10 +111,6 @@ Dispatcher::Dispatcher(Parameters &parameters, Rcpp::Function &update_progress, 
   
   // objects for storing results
   daily_values = array_3d_double(n_demes, max_time);
-  sample_demes = array_2d_int(max_time);
-  sample_IDs = array_3d_int(max_time);
-  sample_positive = array_3d_int(max_time);
-  sample_haplotypes = array_5d_int(max_time);
   
   // misc
   EIR = vector<double>(n_demes);
@@ -129,7 +126,7 @@ void Dispatcher::simulate() {
     print("Running simulation");
   }
   
-  // initialise indices
+  // initialise ring buffer over extrinsic incubation period
   int ringtime = 0;
   
   // loop through daily time steps
@@ -185,11 +182,11 @@ void Dispatcher::simulate() {
           host_index[deme2][rnd2] = index1;
           
           // move infectives as needed
-          if (host_pop[index1].n_active_sexual > 0) {
+          if (host_pop[index1].get_n_active_sexual() > 0) {
             host_infective_index[deme1].erase(index1);
             host_infective_index[deme2].insert(index1);
           }
-          if (host_pop[index2].n_active_sexual > 0) {
+          if (host_pop[index2].get_n_active_sexual() > 0) {
             host_infective_index[deme2].erase(index2);
             host_infective_index[deme1].insert(index2);
           }
@@ -354,35 +351,32 @@ void Dispatcher::simulate() {
                             EIR[k]};
     }
     
-    // individual-based output
-    int n_sample_demes = param_ptr->sample_list[t].size();
+    // store individual-based output
+    int n_sample_demes = param_ptr->sample_list[t].size(); // number of demes to be sampled in this timestep
     if (n_sample_demes > 0) {
-      sample_IDs[t] = vector<vector<int>>(n_sample_demes);
-      sample_positive[t] = vector<vector<int>>(n_sample_demes);
-      sample_haplotypes[t] = vector<vector<vector<vector<int>>>>(n_sample_demes);
       
       for (int i = 0; i < n_sample_demes; ++i) {
         int this_deme = param_ptr->sample_list[t][i].first - 1;
         int this_n = param_ptr->sample_list[t][i].second;
-        sample_demes[t].push_back(this_deme + 1);
         
-        // sample hosts
+        // sample hosts from this deme
         vector<int> rand_vec = sample4(this_n, 0, H - 1);
-        vector<int> sample_IDs_vec(this_n);
-        vector<int> sample_positive_vec(this_n);
-        array_3d_int sample_haplotypes_vec(this_n);
         for (int j = 0; j < this_n; ++j) {
           int this_index = host_index[this_deme][rand_vec[j]];
-          sample_IDs_vec[j] = host_pop[this_index].ID;
-          sample_positive_vec[j] = (host_pop[this_index].get_host_state() == Host_Ih);
-          sample_haplotypes_vec[j] = host_pop[this_index].get_bloodstage_haplotypes();
+          
+          Rcpp::List this_sample;
+          this_sample["t"] = t + 1;
+          this_sample["deme"] = this_deme + 1;
+          this_sample["sample_ID"] = host_pop[this_index].ID;
+          this_sample["positive"] = (host_pop[this_index].get_host_state() == Host_Ih);
+          this_sample["haplotypes"] = host_pop[this_index].get_bloodstage_haplotypes();
+          
+          sample_output.push_back(this_sample);
         }
-        sample_IDs[t][i] = sample_IDs_vec;
-        sample_positive[t][i] = sample_positive_vec;
-        sample_haplotypes[t][i] = sample_haplotypes_vec.arr;
       }
     }
     
   } // end time loop
   
 }
+

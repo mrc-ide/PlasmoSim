@@ -16,7 +16,9 @@ LinkingTo:
 Imports: 
     Rcpp,
     dplyr,
-    magrittr
+    magrittr,
+    openssl,
+    rlang
 SystemRequirements: C++11
 BugReports: https://github.com/mrc-ide/PlasmoSim/issues
 Suggests: 

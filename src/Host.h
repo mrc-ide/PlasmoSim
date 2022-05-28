@@ -3,10 +3,11 @@
 
 #include "Parameters.h"
 #include "Mosquito.h"
-//#include "array.h"
-#include "Sampler_v4.h"
+#include "array_v1.h"
+#include "Sampler_v5.h"
 
 #include <vector>
+#include <map>
 
 //------------------------------------------------
 // enumerate possible asexual and sexual infection status
@@ -63,11 +64,6 @@ public:
   std::vector<int> time_begin_infective;
   std::vector<int> time_end_infective;
   
-  // counts of the number of infections in each stage
-  int n_liverstage_asexual;
-  int n_bloodstage_asexual;
-  int n_active_sexual;
-  
   // time of next event
   int time_next_event;
   
@@ -90,8 +86,10 @@ public:
   void draw_starting_age();
   void death(int &ID, int t);
   
-  void denovo_infection(int haplo_ID);
+  void denovo_infection(int &haplo_ID, int n_haplos, int t);
   void new_infection(Mosquito &mosq, int t);
+  int update_infection_slots(int t);
+  void update_haplotypes_from_mosquito(int this_slot, Mosquito &mosq);
   void update_events(int &ID, int t);
   void update_time_next_event();
   
@@ -100,8 +98,14 @@ public:
   void begin_infective(int this_slot);
   void end_infective(int this_slot);
   
+  int draw_active_slot();
+  
   // getters and setters
+  int get_free_infection_slot();
   int get_n_infections();
+  int get_n_liverstage_asexual();
+  int get_n_bloodstage_asexual();
+  int get_n_active_sexual();
   State_host get_host_state();
   double get_prob_infection();
   std::vector<std::vector<int>> get_bloodstage_haplotypes();

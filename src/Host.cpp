@@ -1,7 +1,7 @@
 
 #include "Host.h"
-#include "probability_v11.h"
-#include "misc_v10.h"
+#include "probability_v17.h"
+#include "misc_v14.h"
 
 using namespace std;
 
@@ -51,15 +51,13 @@ void Host::init(int index, int &ID, int deme,
   infection_active = vector<bool>(max_infections, false);
   infection_status_asexual = vector<Status_asexual>(max_infections, Inactive_asexual);
   infection_status_sexual = vector<Status_sexual>(max_infections, Inactive_sexual);
+  
+  // initialise times to be greater than maximum simulation time (meaning they
+  // will never happen)
   time_Eh_to_Ih = vector<int>(max_infections, max_time + 1);
   time_Ih_to_Sh = vector<int>(max_infections, max_time + 1);
   time_begin_infective = vector<int>(max_infections, max_time + 1);
   time_end_infective = vector<int>(max_infections, max_time + 1);
-  
-  // initialise counts of the number of infections in each stage
-  n_liverstage_asexual = 0;
-  n_bloodstage_asexual = 0;
-  n_active_sexual = 0;
   
   // initialise time of next event
   time_next_event = death_day;
@@ -92,11 +90,12 @@ void Host::draw_starting_age() {
   // from which we can derive r = -log(1-p). If we are already a proportion x
   // through this year, then the probability of dying in the remaining time is
   // Pr(die) = 1 - exp(-r(1-x)). Sustituting in r and simplifying we get Pr(die)
-  // = 1 - (1-p)^(1-x). Notice that as x tends to 1 the chance of dying this
-  // year tends to 0, UNLESS p = 1 in which case death is certain this year
-  // irrespective of x.
+  // = 1 - (1-p)^(1-x). In code, x can never equal exactly 1 as there must
+  // always be at least one day remaining in the current year. Notice that as x
+  // approaches 1 the chance of dying this year tends to 0, UNLESS p = 1 in
+  // which case death is certain this year.
   int life_days = 0;
-  double prop_year_remaining = 1.0 - extra_days/365.0; // (x in the above derivation)
+  double prop_year_remaining = 1.0 - (extra_days + 1) / 365.0; // (x in the above derivation. Ranges from 0 to 364/365)
   double prob_die_this_year = 1.0 - pow(1.0 - param_ptr->life_table[age_years], 1.0 - prop_year_remaining);
   if (rbernoulli1(prob_die_this_year)) {
     life_days = age_years*365 + sample2(extra_days, 364);
@@ -104,7 +103,7 @@ void Host::draw_starting_age() {
     // if we do not die in the current year of age then loop through all
     // remaining years, performing Bernoulli draw from probability of dying in
     // that year
-    for (unsigned int i = (age_years+1); i < param_ptr->life_table.size(); ++i) {
+    for (size_t i = (age_years + 1); i < param_ptr->life_table.size(); ++i) {
       if (rbernoulli1(param_ptr->life_table[i])) {
         life_days = i*365 + sample2(0, 364);
         break;
@@ -132,19 +131,17 @@ void Host::death(int &ID, int t) {
   home_deme = deme;
   
   // set date of birth as today
-  // Each night, when I go to sleep, I die. And the next morning, when I wake
-  // up, I am reborn.
   this->birth_day = t;
   
   // draw life duration from demography distribution
   int life_years = sampler_age_death_ptr->draw();
-  int life_days = life_years*365 + sample2(1, 365);
+  int life_days = life_years*365 + sample2(1, 364);  // makes simplifying assumption that cannot die on day of birth
   death_day = birth_day + life_days;
   
   // reset cumulative number of infections
   cumul_inf = 0;
   
-  // reset infection objects
+  // reset infection-level objects
   fill(infection_active.begin(), infection_active.end(), false);
   fill(infection_status_asexual.begin(), infection_status_asexual.end(), Inactive_asexual);
   fill(infection_status_sexual.begin(), infection_status_sexual.end(), Inactive_sexual);
@@ -152,11 +149,6 @@ void Host::death(int &ID, int t) {
   fill(time_Ih_to_Sh.begin(), time_Ih_to_Sh.end(), max_time + 1);
   fill(time_begin_infective.begin(), time_begin_infective.end(), max_time + 1);
   fill(time_end_infective.begin(), time_end_infective.end(), max_time + 1);
-  
-  // reset counts of the number of infections in each stage
-  n_liverstage_asexual = 0;
-  n_bloodstage_asexual = 0;
-  n_active_sexual = 0;
   
   // reset time of next event
   time_next_event = death_day;
@@ -168,43 +160,46 @@ void Host::death(int &ID, int t) {
 
 //------------------------------------------------
 // de-novo infection
-void Host::denovo_infection(int haplo_ID) {
+void Host::denovo_infection(int &haplo_ID, int n_haplos, int t) {
   
-  // generating starting genotype in a dummy mosquito
-  Mosquito dummy_mosquito;
-  dummy_mosquito.init(param_ptr);
-  dummy_mosquito.denovo_infection(haplo_ID);
+  // find next infection slot and apply changes to represent new infection
+  int this_slot = update_infection_slots(t);
   
-  // carry out infection
-  new_infection(dummy_mosquito, 0);
+  // give each haplotype a unique ID
+  haplotypes.arr[this_slot] = vector<vector<int>>(n_haplos);
+  for (int i = 0; i < n_haplos; ++i) {
+    haplotypes.arr[this_slot][i] = vector<int>(L, haplo_ID);
+    haplo_ID++;
+  }
+  
 }
 
 //------------------------------------------------
-// new infection
+// new infection from mosquito
 void Host::new_infection(Mosquito &mosq, int t) {
-  
-  // update cumulative infections irrespective of whether infection takes hold
-  cumul_inf++;
   
   // return if already at max_infections
   if (get_n_infections() == max_infections) {
     return;
   }
   
-  // get next free infection slot
-  int this_slot = 0;
-  for (int i = 0; i < max_infections; ++i) {
-    if (!infection_active[i]) {
-      break;
-    }
-    this_slot++;
-  }
-  if (this_slot == max_infections) {
-    Rcpp::stop("could not find free infection slot");
-  }
+  // find next infection slot and apply changes to represent new infection
+  int this_slot = update_infection_slots(t);
   
-  // update infection counts
-  n_liverstage_asexual++;
+  // get haplotypes from mosquito
+  update_haplotypes_from_mosquito(this_slot, mosq);
+  
+}
+
+//------------------------------------------------
+// update infection slots to represent new infection. Return the chosen slot
+int Host::update_infection_slots(int t) {
+  
+  // update cumulative infections
+  cumul_inf++;
+  
+  // get next free infection slot
+  int this_slot = get_free_infection_slot();
   
   // draw duration of infection
   int duration_infection = sampler_duration_infection_ptr->draw() + 1;
@@ -222,7 +217,14 @@ void Host::new_infection(Mosquito &mosq, int t) {
     time_next_event = t + u;
   }
   
-  // draw number of recombinant products
+  return this_slot;
+}
+
+//------------------------------------------------
+// update haplotypes array by drawing recombinant products from mosquito
+void Host::update_haplotypes_from_mosquito(int this_slot, Mosquito &mosq) {
+  
+  // draw number of recombinant products obtained from mosquito
   int n_products = rztpois1(lambda_products);
   
   // copy over products of recombination
@@ -246,11 +248,14 @@ void Host::update_events(int &ID, int t) {
     for (int i = 0; i < max_infections; ++i) {
       if (time_Eh_to_Ih[i] == t) {
         Eh_to_Ih(i);
-      } else if (time_Ih_to_Sh[i] == t) {
+      }
+      if (time_Ih_to_Sh[i] == t) {
         Ih_to_Sh(i);
-      } else if (time_begin_infective[i] == t) {
+      }
+      if (time_begin_infective[i] == t) {
         begin_infective(i);
-      } else if (time_end_infective[i] == t) {
+      }
+      if (time_end_infective[i] == t) {
         end_infective(i);
       }
     }
@@ -284,9 +289,6 @@ void Host::Eh_to_Ih(int this_slot) {
   // reset time to next event
   time_Eh_to_Ih[this_slot] = max_time + 1;
   
-  // update infection counts
-  n_liverstage_asexual--;
-  n_bloodstage_asexual++;
 }
 
 //------------------------------------------------
@@ -299,8 +301,6 @@ void Host::Ih_to_Sh(int this_slot) {
   // reset time to next event
   time_Ih_to_Sh[this_slot] = max_time + 1;
   
-  // update infection counts
-  n_bloodstage_asexual--;
 }
 
 //------------------------------------------------
@@ -312,9 +312,6 @@ void Host::begin_infective(int this_slot) {
   
   // reset time to next event
   time_begin_infective[this_slot] = max_time + 1;
-  
-  // update infection counts
-  n_active_sexual++;
   
   // add to infectives set (will do nothing if already in set)
   (*host_infective_index_ptr)[deme].insert(index);
@@ -332,17 +329,63 @@ void Host::end_infective(int this_slot) {
   // reset time to next event
   time_end_infective[this_slot] = max_time + 1;
   
-  // update infection counts
-  n_active_sexual--;
-  
   // if no longer infective then drop from infectives set
-  if (n_active_sexual == 0) {
+  if (get_n_active_sexual() == 0) {
     (*host_infective_index_ptr)[deme].erase(index);
   }
   
   // clear heplotypes
   haplotypes[this_slot].clear();
   
+}
+
+//------------------------------------------------
+// sample from active slots with equal probability
+int Host::draw_active_slot() {
+  
+  // error if no active infections to sample
+  int n_active_sexual = get_n_active_sexual();
+  if (n_active_sexual == 0) {
+    Rcpp::stop("no active infections to sample");
+  }
+  
+  // sample from active slots only
+  int ret = 0;
+  int n = sample2(1, n_active_sexual);
+  for (int j = 0; j < max_infections; ++j) {
+    n -= infection_active[j];
+    if (n == 0) {
+      ret = j;
+      break;
+    }
+  }
+  
+  return ret;
+}
+
+// #################################
+// #                               #
+// #      GETTERS AND SETTERS      #
+// #                               #
+// #################################
+
+//------------------------------------------------
+// get total number of infections. This counts infections in either asexual or
+// sexual states
+int Host::get_free_infection_slot() {
+  
+  int ret = 0;
+  for (int i = 0; i < max_infections; ++i) {
+    if (!infection_active[i]) {
+      break;
+    }
+    ret++;
+  }
+  if (ret == max_infections) {
+    Rcpp::stop("could not find free infection slot");
+  }
+  
+  return ret;
 }
 
 //------------------------------------------------
@@ -353,10 +396,46 @@ int Host::get_n_infections() {
 }
 
 //------------------------------------------------
+// get number of infections that have asexual liverstage parasites present
+int Host::get_n_liverstage_asexual() {
+  int ret = 0;
+  for (int i = 0; i < max_infections; ++i) {
+    if (infection_status_asexual[i] == Liverstage_asexual) {
+      ret++;
+    }
+  }
+  return ret;
+}
+
+//------------------------------------------------
+// get number of infections that have asexual bloodstage parasites present
+int Host::get_n_bloodstage_asexual() {
+  int ret = 0;
+  for (int i = 0; i < max_infections; ++i) {
+    if (infection_status_asexual[i] == Bloodstage_asexual) {
+      ret++;
+    }
+  }
+  return ret;
+}
+
+//------------------------------------------------
+// get number of infections for which gametocytes are present
+int Host::get_n_active_sexual() {
+  int ret = 0;
+  for (int i = 0; i < max_infections; ++i) {
+    if (infection_status_sexual[i] == Active_sexual) {
+      ret++;
+    }
+  }
+  return ret;
+}
+
+//------------------------------------------------
 // get host state
 State_host Host::get_host_state() {
-  if (n_bloodstage_asexual == 0) {
-    if (n_liverstage_asexual == 0) {
+  if (get_n_bloodstage_asexual() == 0) {
+    if (get_n_liverstage_asexual() == 0) {
       return Host_Sh;
     } else {
       return Host_Eh;
@@ -368,7 +447,7 @@ State_host Host::get_host_state() {
 //------------------------------------------------
 // get current probability of infection
 double Host::get_prob_infection() {
-  int p = param_ptr->n_prob_infection;
+  int p = int(param_ptr->prob_infection.size());
   int i = (cumul_inf > (p - 1)) ? p - 1 : cumul_inf;
   return param_ptr->prob_infection[i];
 }

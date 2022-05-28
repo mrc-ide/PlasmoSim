@@ -4,11 +4,12 @@
 #include "Parameters.h"
 #include "Host.h"
 #include "Mosquito.h"
-#include "misc_v10.h"
-#include "Sampler_v4.h"
-#include "array.h"
+#include "misc_v14.h"
+#include "Sampler_v5.h"
+#include "array_v1.h"
 
 #include <set>
+#include <map>
 
 //------------------------------------------------
 // class defining individual-based simulation model
@@ -38,7 +39,8 @@ public:
   Sampler sampler_age_death;
   Sampler sampler_duration_infection;
   
-  // ID of next haplotype
+  // ID of next infection and next haplotype
+  int next_infection_ID;
   int next_haplo_ID;
   
   // counts of host types
@@ -78,12 +80,12 @@ public:
   array_3d_int Ev_to_Iv;
   array_2d_int Iv_index;
   
+  // map of infection_ID pedigree
+  std::map<int, std::vector<int>> infection_map;
+  
   // objects for storing results
   array_3d_double daily_values;
-  array_2d_int sample_demes;
-  array_3d_int sample_IDs;
-  array_3d_int sample_positive;
-  array_5d_int sample_haplotypes;
+  Rcpp::List sample_output;
   
   // misc
   std::vector<double> EIR;
@@ -96,5 +98,6 @@ public:
   
   // methods
   void simulate();
+  void print_infection_map();
   
 };
