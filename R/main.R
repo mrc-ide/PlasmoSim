@@ -28,6 +28,8 @@
 #'   deme.
 #' @param seed_infections vector specifying the initial number of infected
 #'   humans in each deme.
+#' @param seed_list list specifying initial number of seed infections of each
+#'   host in each deme.
 #' @param M vector specifying mosquito population size (strictly the number of
 #'   adult female mosquitoes) in each deme.
 #' @param mig_matrix migration matrix specifing the daily probability of
@@ -77,7 +79,7 @@ sim_falciparum <- function(a = 0.3,
                            max_infections = 5,
                            H = 1000,
                            seed_infections = 100,
-                           seed_list = lapply(seed_infections,sample.int,n=5,replace=TRUE),
+                           seed_list = lapply(seed_infections,sample.int,n=max_infections,replace=TRUE),
                            M = 1000,
                            mig_matrix = diag(length(M)),
                            L = 24,
