@@ -240,6 +240,20 @@ test_that("assert_vector working correctly", {
 })
 
 #------------------------------------------------
+test_that("assert_vector_logical working correctly", {
+  expect_true(assert_vector_logical(TRUE))
+  expect_true(assert_vector_logical(rep(FALSE, 5)))
+  
+  expect_error(assert_vector_logical(NULL))
+  expect_error(assert_vector_logical(1))
+  expect_error(assert_vector_logical(1:5))
+  expect_error(assert_vector_logical(c("a", "b")))
+  expect_error(assert_vector_logical(matrix(5,3,3)))
+  expect_error(assert_vector_logical(list(1:5, 1:10)))
+  expect_error(assert_vector_logical(data.frame(1:5, 2:6)))
+})
+
+#------------------------------------------------
 test_that("assert_vector_numeric working correctly", {
   expect_true(assert_vector_numeric(1))
   expect_true(assert_vector_numeric(1:5))

@@ -25,15 +25,14 @@ public:
   int v;
   int g;
   std::vector<double> prob_infection;
-  int n_prob_infection;
   std::vector<double> duration_infection;
-  int n_duration_infection;
   double infectivity;
   int max_infections;
   
   // deme parameters
   int H;
   std::vector<int> seed_infections;
+  Rcpp::List seed_list;
   std::vector<int> M_vec;
   int n_demes;
   
