@@ -54,7 +54,8 @@
 #'   \enumerate{
 #'     \item \code{deme}: which numbered deme to sample from.
 #'     \item \code{time}: the day on which samples are taken.
-#'     \item \code{n}: the number of hosts to randomly sample from the population.
+#'     \item \code{n}: the number of hosts to randomly sample (without
+#'     replacement) from the population.
 #'   }
 #' @param report_progress if \code{TRUE} then a progress bar is printed to the
 #'   console during simuation.
@@ -126,6 +127,7 @@ sim_falciparum <- function(a = 0.3,
   assert_leq(sample_dataframe$deme, n_demes, message = sprintf("sample_dataframe demes must be consistent with the number of demes implied by the migration matrix, i.e. between 1 and %s", n_demes))
   assert_pos_int(sample_dataframe$time, zero_allowed = FALSE)
   assert_pos_int(sample_dataframe$n, zero_allowed = FALSE)
+  assert_leq(sample_dataframe$n, H, message = "sample_dataframe n must be less than or equal to human population size")
   assert_single_logical(report_progress)
   
   # normalise infection duration distribution
