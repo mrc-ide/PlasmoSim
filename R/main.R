@@ -24,7 +24,8 @@
 #'   infective human host.
 #' @param max_infections maximum number of infections that an individual
 #'   can hold simultaneously.
-#' @param H human population size, which is assumed the same in every deme.
+#' @param H human population size, which is assumed to be the same in every
+#'   deme.
 #' @param seed_infections vector specifying the initial number of infected
 #'   humans in each deme.
 #' @param M vector specifying mosquito population size (strictly the number of
@@ -41,17 +42,20 @@
 #'   sampling N times with replacement from the available oocysts products (the
 #'   available number of products is 4 times the number of oocysts). N is drawn
 #'   independently for each infection from a zero-truncated Poisson distribution
-#'   with mean \code{mean_products}. Hence, large values of this parameter
-#'   increase the chance of co-transmission of multiple genotypes, while small
-#'   values increase the chance of picking up just a single genotype.
+#'   with mean given by \code{mean_products}. Hence, large values of this
+#'   parameter increase the chance of co-transmission of multiple genotypes,
+#'   while small values increase the chance of picking up just a single
+#'   genotype.
 #' @param recomb_prob the probability of a recombination breakpoint between any
 #'   sequential pair of loci. Assumed to be the same for all loci.
-#' @param max_time run simulation for this many days.
-#' @param sample_dataframe a dataframe specifying outputs from the model. Must have three columns:
+#' @param max_time number of days in the simulation.
+#' @param sample_dataframe a dataframe specifying outputs from the model. Must
+#'   contain the following three columns:
 #'   \enumerate{
-#'     \item deme: which numbered deme to sample from.
-#'     \item time: which timepoint (day) to sample from.
-#'     \item n: number of hosts to randomly sample on this day.
+#'     \item \code{deme}: which numbered deme to sample from.
+#'     \item \code{time}: the day on which samples are taken.
+#'     \item \code{n}: the number of hosts to randomly sample (without
+#'     replacement) from the population.
 #'   }
 #' @param report_progress if \code{TRUE} then a progress bar is printed to the
 #'   console during simuation.
@@ -59,6 +63,7 @@
 #' @importFrom utils txtProgressBar
 #' @importFrom stats dgeom setNames optim
 #' @importFrom magrittr %>%
+#' @importFrom rlang .data
 #' @export
 
 sim_falciparum <- function(a = 0.3,
@@ -122,6 +127,7 @@ sim_falciparum <- function(a = 0.3,
   assert_leq(sample_dataframe$deme, n_demes, message = sprintf("sample_dataframe demes must be consistent with the number of demes implied by the migration matrix, i.e. between 1 and %s", n_demes))
   assert_pos_int(sample_dataframe$time, zero_allowed = FALSE)
   assert_pos_int(sample_dataframe$n, zero_allowed = FALSE)
+  assert_leq(sample_dataframe$n, H, message = "sample_dataframe n must be less than or equal to human population size")
   assert_single_logical(report_progress)
   
   # normalise infection duration distribution
@@ -212,23 +218,39 @@ sim_falciparum <- function(a = 0.3,
   }, seq_along(output_raw$daily_values), SIMPLIFY = FALSE) %>%
     dplyr::bind_rows()
   
-  # process individual-level data
-  indlevel <- mapply(function(i) {
-    mapply(function(j) {
-      ret <- data.frame(time = i,
-                        deme = output_raw$sample_demes[[i]][j],
-                        ID = output_raw$sample_IDs[[i]][[j]],
-                        positive = output_raw$sample_positive[[i]][[j]])
-      
-      ret$haplotypes  <- mapply(function(x) {
-        do.call(rbind, x)
-        unique(do.call(rbind, x))
-      }, output_raw$sample_haplotypes[[i]][[j]])
-      
-      return(ret)
-    }, seq_along(output_raw$sample_IDs[[i]]), SIMPLIFY = FALSE)
-  }, seq_along(output_raw$sample_IDs), SIMPLIFY = FALSE) %>%
+  # process basic individual-level data
+  indlevel <- mapply(function(x) {
+    data.frame(time = x$t,
+               deme = x$deme,
+               sample_ID = x$sample_ID,
+               positive = x$positive)
+  }, output_raw$sample_output, SIMPLIFY = FALSE) %>%
     dplyr::bind_rows()
+  
+  # append haplotypes as list
+  indlevel$haplotypes <- mapply(function(x) {
+    l <- length(x$haplotypes)
+    if (l > 0) {
+      ret <- matrix(unlist(x$haplotypes), nrow = l, byrow = TRUE)
+    } else {
+      ret <- NULL
+    }
+    return(ret)
+  }, output_raw$sample_output)
+  
+  # get unique hash of each haplotype
+  indlevel$haplo_ID <- mapply(function(x) {
+    if (is.null(x)) {
+      ret <- NULL
+    } else {
+      ret <- apply(x, 1, function(s) openssl::md5(paste(s, collapse = ".")))
+    }
+    return(ret)
+  }, indlevel$haplotypes)
+  
+  # reorder columns
+  indlevel <- indlevel %>% 
+    dplyr::relocate(.data$haplo_ID, .before = .data$haplotypes)
   
   # return list
   ret <- list(daily_values = daily_values,
@@ -293,12 +315,11 @@ get_identity_matrix <- function(sim_output, deme_level = FALSE) {
   assert_list_named(sim_output)
   assert_in("indlevel", names(sim_output))
   assert_dataframe(sim_output$indlevel)
-  assert_in(c("time", "deme", "ID", "positive", "haplotypes"), names(sim_output$indlevel))
+  assert_in(c("time", "deme", "sample_ID", "positive", "haplotypes"), names(sim_output$indlevel))
   assert_vector_pos_int(sim_output$indlevel$time)
   assert_vector_pos_int(sim_output$indlevel$deme)
-  assert_vector_pos_int(sim_output$indlevel$ID)
-  assert_vector_pos_int(sim_output$indlevel$positive)
-  assert_leq(sim_output$indlevel$positive, 1)
+  assert_vector_pos_int(sim_output$indlevel$sample_ID)
+  assert_vector_logical(sim_output$indlevel$positive)
   assert_list(sim_output$indlevel$haplotypes)
   
   # split individual-level output by sampling time
@@ -321,7 +342,7 @@ get_identity_matrix <- function(sim_output, deme_level = FALSE) {
     }, seq_along(x$haplotypes))
     
     # set row and column names
-    colnames(ret_mat) <-  rownames(ret_mat) <- x$ID
+    colnames(ret_mat) <-  rownames(ret_mat) <- x$sample_ID
     
     ret_mat
   }, tsplit, SIMPLIFY = FALSE)
@@ -341,7 +362,7 @@ get_identity_matrix <- function(sim_output, deme_level = FALSE) {
     }
     
     # get dataframe of demes and IDs
-    deme_IDs <- subset(x, select = c("deme", "ID"))
+    deme_IDs <- subset(x, select = c("deme", "sample_ID"))
     
     # get unique demes
     u <- unique(x$deme)
@@ -349,8 +370,8 @@ get_identity_matrix <- function(sim_output, deme_level = FALSE) {
     # get pairwise similarity averaged over all individuals within a deme
     ret_mat <- mapply(function(i) {
       mapply(function(j) {
-        IDs_i <- subset(deme_IDs, deme == u[i])$ID
-        IDs_j <- subset(deme_IDs, deme == u[j])$ID
+        IDs_i <- subset(deme_IDs, deme == u[i])$sample_ID
+        IDs_j <- subset(deme_IDs, deme == u[j])$sample_ID
         w1 <- match(IDs_i, as.numeric(colnames(indlevel_list[[t_i]])))
         w2 <- match(IDs_j, as.numeric(colnames(indlevel_list[[t_i]])))
         mean(indlevel_list[[t_i]][w1, w2])

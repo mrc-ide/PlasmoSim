@@ -25,9 +25,7 @@ public:
   int v;
   int g;
   std::vector<double> prob_infection;
-  int n_prob_infection;
   std::vector<double> duration_infection;
-  int n_duration_infection;
   double infectivity;
   int max_infections;
   
