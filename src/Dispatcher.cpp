@@ -134,7 +134,7 @@ void Dispatcher::simulate() {
     
     // report progress
     if (param_ptr->report_progress) {
-      (*update_progress_ptr)(*args_progress_ptr, "pb", t + 1, max_time);
+      (*update_progress_ptr)(*args_progress_ptr, "pb_main");
     }
     
     // skip all dynamics if t = 0. Ensures that user-defined starting conditions
@@ -243,7 +243,6 @@ void Dispatcher::simulate() {
         int v_infected = rbinom1(v_infected_or_death, prob_v_infected);         // number of susceptible mosquitoes becoming infected
         
         // loop through infective bites
-        int death_in_lag = 0;
         for (int i = 0; i < v_infected; ++i) {
           
           // choose mosquito at random from susceptibles
@@ -259,7 +258,6 @@ void Dispatcher::simulate() {
           // future time point.
           int v_time_death = rgeom1(prob_v_death) + 1;
           if (v_time_death <= v) {
-            death_in_lag++;
             
             // schedule death
             Ev_death[k][(ringtime + v_time_death) % v].push_back(this_mosq);

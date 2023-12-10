@@ -62,8 +62,8 @@
 #'
 #' @importFrom utils txtProgressBar
 #' @importFrom stats dgeom setNames optim
-#' @importFrom magrittr %>%
 #' @importFrom rlang .data
+#' @importFrom knitrProgressBar progress_estimated update_progress
 #' @export
 
 sim_falciparum <- function(a = 0.3,
@@ -166,9 +166,12 @@ sim_falciparum <- function(a = 0.3,
   # create function list
   args_functions <- list(update_progress = update_progress)
   
-  # create progress bars
-  pb <- txtProgressBar(0, max_time, initial = NA, style = 3)
-  args_progress <- list(pb = pb)
+  # create progress bars and store these in a separate environment. Then store
+  # that environment in a list
+  pb_main <<- knitrProgressBar::progress_estimated(max_time)
+  pb_env <- new.env()
+  assign("pb_main", pb_main, envir = pb_env)
+  args_progress <- list(pb_env = pb_env)
   
   # create argument list
   args <- list(a = a,
@@ -208,14 +211,14 @@ sim_falciparum <- function(a = 0.3,
   
   # get daily values
   daily_values <- mapply(function(i) {
-    output_raw$daily_values[[i]] %>%
-      rcpp_to_matrix() %>%
-      as.data.frame() %>%
-      setNames(c("S", "E", "I", "Sv", "Ev", "Iv", "EIR")) %>%
+    output_raw$daily_values[[i]] |>
+      rcpp_to_matrix() |>
+      as.data.frame() |>
+      setNames(c("S", "E", "I", "Sv", "Ev", "Iv", "EIR")) |>
       dplyr::mutate(time = seq_along(S),
                     deme = i,
                     .before = 1)
-  }, seq_along(output_raw$daily_values), SIMPLIFY = FALSE) %>%
+  }, seq_along(output_raw$daily_values), SIMPLIFY = FALSE) |>
     dplyr::bind_rows()
   
   # process basic individual-level data
@@ -224,11 +227,13 @@ sim_falciparum <- function(a = 0.3,
                deme = x$deme,
                sample_ID = x$sample_ID,
                positive = x$positive)
-  }, output_raw$sample_output, SIMPLIFY = FALSE) %>%
+  }, output_raw$sample_output, SIMPLIFY = FALSE) |>
     dplyr::bind_rows()
   
-  # append haplotypes as list
-  indlevel$haplotypes <- mapply(function(x) {
+  # get haplotypes as list
+  haplotypes <- mapply(function(x) {
+    # remove duplicates
+    x$haplotypes <- unique(x$haplotypes)
     l <- length(x$haplotypes)
     if (l > 0) {
       ret <- matrix(unlist(x$haplotypes), nrow = l, byrow = TRUE)
@@ -239,18 +244,18 @@ sim_falciparum <- function(a = 0.3,
   }, output_raw$sample_output)
   
   # get unique hash of each haplotype
-  indlevel$haplo_ID <- mapply(function(x) {
+  haplo_ID <- mapply(function(x) {
     if (is.null(x)) {
       ret <- NULL
     } else {
       ret <- apply(x, 1, function(s) openssl::md5(paste(s, collapse = ".")))
     }
     return(ret)
-  }, indlevel$haplotypes)
+  }, haplotypes)
   
-  # reorder columns
-  indlevel <- indlevel %>% 
-    dplyr::relocate(.data$haplo_ID, .before = .data$haplotypes)
+  # add to indlevel columns
+  indlevel$haplotypes <- haplotypes
+  indlevel$haplo_ID <- haplo_ID
   
   # return list
   ret <- list(daily_values = daily_values,

@@ -62,7 +62,7 @@ assert_NA <- function(x, message = NULL,
     message <- sprintf("%s must be NA", name)
   }
   
-  assert_non_null(x)
+  assert_non_null(x, name = name, message = message)
   if (!all(is.na(x))) {
     stop(message, call. = FALSE)
   }
@@ -159,10 +159,26 @@ assert_int <- function(x, message = NULL,
     message <- sprintf("%s must be integer valued", name)
   }
 
-  assert_numeric(x, name = name)
-  if (!isTRUE(all.equal(x, as.integer(x), check.attributes = FALSE))) {
+  assert_numeric(x, name = name, message = message)
+  if (!isTRUE(all.equal(x, round(x), check.attributes = FALSE))) {
     stop(message, call. = FALSE)
   }
+  return(TRUE)
+}
+
+#------------------------------------------------
+# x is integer and within C++ int limits
+#' @noRd
+assert_cpp_int <- function(x, message = NULL,
+                           name = paste(deparse(substitute(x)), collapse = "")) {
+  # default message
+  if (is.null(message)) {
+    message <- sprintf("%s must be integer valued and within C++ integer limits (-2147483649 > x < 2147483648)", name)
+  }
+  
+  assert_int(x, name = name, message = message)
+  assert_gr(x, -2147483649, name_x = name, message = message)
+  assert_le(x, 2147483648, name_x = name, message = message)
   return(TRUE)
 }
 
@@ -180,7 +196,7 @@ assert_pos <- function(x, zero_allowed = TRUE, message = NULL,
     }
   }
 
-  assert_numeric(x, name = name)
+  assert_numeric(x, name = name, message = message)
   if (zero_allowed) {
     if (!all(x >= 0)) {
       stop(message, call. = FALSE)
@@ -372,6 +388,23 @@ assert_single_int <- function(x, message = NULL,
 }
 
 #------------------------------------------------
+# x is single integer and within C++ int limits
+#' @noRd
+assert_single_cpp_int <- function(x, message = NULL,
+                                  name = paste(deparse(substitute(x)), collapse = "")) {
+  
+  # default message
+  if (is.null(message)) {
+    message <- sprintf("%s must be a single integer and within C++ integer limits (-2147483649 > x < 2147483648)", name)
+  }
+  
+  assert_single_int(x, name = name, message = message)
+  assert_gr(x, -2147483649, name_x = name, message = message)
+  assert_le(x, 2147483648, name_x = name, message = message)
+  return(TRUE)
+}
+
+#------------------------------------------------
 # x is single positive (with or without zero allowed)
 #' @noRd
 assert_single_pos <- function(x, zero_allowed = TRUE, message = NULL,
@@ -412,6 +445,27 @@ assert_pos_int <- function(x, zero_allowed = TRUE, message = NULL,
 }
 
 #------------------------------------------------
+# x is positive integer (with or without zero allowed) and within C++ int limits
+#' @noRd
+assert_pos_cpp_int <- function(x, zero_allowed = TRUE, message = NULL,
+                               name = paste(deparse(substitute(x)), collapse = "")) {
+  
+  # default message
+  if (is.null(message)) {
+    if (zero_allowed) {
+      message <- sprintf("%s must be a positive integer or zero and within C++ integer limits (< 2147483648)", name)
+    } else {
+      message <- sprintf("%s must be a positive integer and within C++ integer limits (< 2147483648)", name)
+    }
+  }
+  
+  
+  assert_pos_int(x, zero_allowed = zero_allowed, name = name, message = message)
+  assert_le(x, 2147483648, name_x = name, message = message)
+  return(TRUE)
+}
+
+#------------------------------------------------
 # x is single positive integer (with or without zero allowed)
 #' @noRd
 assert_single_pos_int <- function(x, zero_allowed = TRUE, message = NULL,
@@ -428,6 +482,26 @@ assert_single_pos_int <- function(x, zero_allowed = TRUE, message = NULL,
   
   assert_length(x, n = 1, name = name, message = message)
   assert_pos_int(x, zero_allowed = zero_allowed, name = name, message = message)
+  return(TRUE)
+}
+
+#------------------------------------------------
+# x is single positive integer (with or without zero allowed) and within C++ int limits
+#' @noRd
+assert_single_pos_cpp_int <- function(x, zero_allowed = TRUE, message = NULL,
+                                      name = paste(deparse(substitute(x)), collapse = "")) {
+  
+  # default message
+  if (is.null(message)) {
+    if (zero_allowed) {
+      message <- sprintf("%s must be a single positive integer or zeroand within C++ integer limits (< 2147483648)", name)
+    } else {
+      message <- sprintf("%s must be a single positive integer and within C++ integer limits (< 2147483648)", name)
+    }
+  }
+  
+  assert_single_pos_int(x, zero_allowed = zero_allowed, name = name, message = message)
+  assert_le(x, 2147483648, name_x = name, message = message)
   return(TRUE)
 }
 

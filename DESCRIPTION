@@ -10,15 +10,15 @@ Description: A basic Plasmodium simulator. Contains functions to simulate epidem
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3
 LinkingTo: 
     Rcpp
 Imports: 
     Rcpp,
     dplyr,
-    magrittr,
     openssl,
-    rlang
+    rlang,
+    knitrProgressBar
 SystemRequirements: C++11
 BugReports: https://github.com/mrc-ide/PlasmoSim/issues
 Suggests: 
