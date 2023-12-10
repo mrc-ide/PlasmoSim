@@ -6,7 +6,7 @@
 #'   falciparum transmission.
 #'
 #' @docType package
-#' @name goodegg
+#' @name PlasmoSim
 NULL
 
 #------------------------------------------------

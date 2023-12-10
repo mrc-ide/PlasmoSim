@@ -97,7 +97,8 @@ contain the following three columns:
 \enumerate{
   \item \code{deme}: which numbered deme to sample from.
   \item \code{time}: the day on which samples are taken.
-  \item \code{n}: the number of hosts to randomly sample from the population.
+  \item \code{n}: the number of hosts to randomly sample (without
+  replacement) from the population.
 }}
 
 \item{report_progress}{if \code{TRUE} then a progress bar is printed to the
