@@ -1,46 +1,24 @@
 ---
-#output: github_document
-output: html_document
+title: "Basic tutorial"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Basic tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
-
-<!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
-  fig.path = "man/figures/README-",
-  out.width = "100%"
+  comment = "#>"
 )
 ```
-
-# PlasmoSim
-
-<!-- badges: start -->
-[![develop checks](https://github.com/mrc-ide/PlasmoSim/workflows/checks_develop/badge.svg)](https://github.com/mrc-ide/PlasmoSim/actions)
-[![master checks](https://github.com/mrc-ide/PlasmoSim/workflows/checks_master/badge.svg)](https://github.com/mrc-ide/PlasmoSim/actions)
-<!-- badges: end -->
-
-PlasmoSim is an R package for simulating both epidemiological and genetic data from a simple model of Plasmodium falciparum transmission. The model itself is fairly lightweight, which speeds up computation times and in turn increases the number of demes (partially isolated sub-populations) that we can simulate. This allows us to explore interesting questions relating to spatial patterns of P. falciparum genetic structure.
-
-## Installation
-
-You can install the development version of PlasmoSim from [GitHub](https://github.com/) with:
-
-``` r
-# install.packages("devtools")
-devtools::install_github("mrc-ide/PlasmoSim")
-```
-
-Now we can load the Plasmosim package, along with others that will be useful:
-
-```{r, message=FALSE}
-# load packages
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 library(PlasmoSim)
-library(ggplot2)
-library(tidyverse)
 library(kableExtra)
+library(tidyverse)
 ```
+
 
 ## Example
 

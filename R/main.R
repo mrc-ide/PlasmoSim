@@ -1,3 +1,14 @@
+#------------------------------------------------
+#' @title Check that PlasmoSim package has loaded successfully
+#'
+#' @description Simple function to check that PlasmoSim package has loaded 
+#'   successfully. Prints "PlasmoSim loaded successfully!" if so.
+#'
+#' @export
+
+check_PlasmoSim_loaded <- function() {
+  message("PlasmoSim loaded successfully!")
+}
 
 #------------------------------------------------
 #' @title Simulate genetic data from simple P. falciparum model
@@ -168,7 +179,7 @@ sim_falciparum <- function(a = 0.3,
   
   # create progress bars and store these in a separate environment. Then store
   # that environment in a list
-  pb_main <<- knitrProgressBar::progress_estimated(max_time)
+  pb_main <- knitrProgressBar::progress_estimated(max_time)
   pb_env <- new.env()
   assign("pb_main", pb_main, envir = pb_env)
   args_progress <- list(pb_env = pb_env)
