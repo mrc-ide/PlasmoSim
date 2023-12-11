@@ -22,5 +22,8 @@ Imports:
 SystemRequirements: C++11
 BugReports: https://github.com/mrc-ide/PlasmoSim/issues
 Suggests: 
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+VignetteBuilder: knitr

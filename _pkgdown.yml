@@ -1,0 +1,34 @@
+title: PlasmoSim
+template:
+  params:
+    bootswatch: flatly
+
+navbar:
+  title: PlasmoSim
+  left:
+    - text: Installation
+      href: articles/installation.html
+    - text: Tutorials
+      menu:
+        - text: Running a basic model
+          href: articles/tutorial_basic.html
+        - text: Space and human movement
+          href: articles/tutorial_movement.html
+        - text: Pairwise relatedness
+          href: articles/tutorial_relatedness.html
+    - text: Functions
+      href: reference/index.html
+
+# here is an example of how sub-menus can be used:
+#    - text: Get started
+#      menu:
+#        - text: Installation
+#          href: articles/installation.html
+#        - text: -------
+#        - text: Working through the pipeline
+#        - text: Simulating malaria transmission
+#          menu:
+#            - text: A simple model
+#              href: 404.html
+#            - text: Population surveys
+#              href: 404.html
