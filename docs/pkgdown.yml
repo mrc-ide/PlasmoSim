@@ -1,0 +1,10 @@
+pandoc: 3.1.1
+pkgdown: 2.0.7
+pkgdown_sha: ~
+articles:
+  installation: installation.html
+  tutorial_basic: tutorial_basic.html
+  tutorial_movement: tutorial_movement.html
+  tutorial_relatedness: tutorial_relatedness.html
+last_built: 2023-12-11T04:49Z
+
