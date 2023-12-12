@@ -1,7 +1,7 @@
 Package: PlasmoSim
 Type: Package
 Title: Simulation of Plasmodium genetic data
-Version: 0.1.0
+Version: 1.0.0
 Authors@R: as.person(c(
     "Bob Verity <r.verity@imperial.ac.uk> [aut, cre]"
   ))
@@ -24,6 +24,8 @@ BugReports: https://github.com/mrc-ide/PlasmoSim/issues
 Suggests: 
     knitr,
     rmarkdown,
+    tidyverse,
+    kableExtra,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr

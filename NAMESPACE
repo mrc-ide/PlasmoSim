@@ -3,6 +3,8 @@
 export(check_PlasmoSim_loaded)
 export(get_haplotype_identity)
 export(get_identity_matrix)
+export(get_spatial_distance)
+export(lonlat_to_bearing)
 export(plasmosim_file)
 export(sim_falciparum)
 importFrom(Rcpp,sourceCpp)
