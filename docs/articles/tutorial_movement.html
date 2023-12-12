@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>tutorial_movement • PlasmoSim</title>
+<title>Space and human movement • PlasmoSim</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="tutorial_movement">
+<script src="../pkgdown.js"></script><meta property="og:title" content="Space and human movement">
 <meta property="og:description" content="PlasmoSim">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PlasmoSim</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -54,9 +54,6 @@
     </li>
     <li>
       <a href="../articles/tutorial_movement.html">Space and human movement</a>
-    </li>
-    <li>
-      <a href="../articles/tutorial_relatedness.html">Pairwise relatedness</a>
     </li>
   </ul>
 </li>
@@ -84,7 +81,7 @@
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>tutorial_movement</h1>
+      <h1 data-toc-skip>Space and human movement</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/PlasmoSim/blob/HEAD/vignettes/tutorial_movement.Rmd" class="external-link"><code>vignettes/tutorial_movement.Rmd</code></a></small>
@@ -94,13 +91,259 @@
 
     
     
+<p>PlasmoSim contains a simple model of human movement. This tutorial
+covers:</p>
+<ul>
+<li>Defininga a migration matrix, simulating with migration, and
+visualising output.</li>
+<li>Exploring the impact of migration on genetic similarity.</li>
+</ul>
+<p>Load necessary packages:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">PlasmoSim</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">PlasmoSim</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span></span></code></pre></div>
+<div class="section level2">
+<h2 id="defining-the-migration-matrix-and-simulating-with-migration">Defining the migration matrix and simulating with migration<a class="anchor" aria-label="anchor" href="#defining-the-migration-matrix-and-simulating-with-migration"></a>
+</h2>
+<p>PlasmoSim incorporates migration of hosts between demes using a
+migration matrix. We have to be careful when simulating stochastic
+movement of people between demes, as if we simply give each person a
+random chance of moving from one deme to another taken from this
+migration matrix then population sizes will drift up and down at random
+and eventually we will see demes emptying entirely. To get around this
+we do matched migration, meaning people swap places between demes rather
+than moving independently. This satisfies the migration matrix, while
+also ensuring that population sizes stay constant throughout the
+simulation. We do not model mosquito movement in this version of the
+package.</p>
+<p>We start by creating a grid of demes, and for each deme specifying
+its properties, such as the mosquito population size and the number of
+seeding infections. In our case we will make the density of mosquitoes
+(and hence the EIR) increase from left to right of the domain. Note that
+human population sizes must be the same for all demes due to the
+migration constraint described above.</p>
+<p>We do not <em>have</em> to define the spatial locations of these
+demes - everything we need to know is essentially encoded in the
+migration matrix. However, it can be useful to give them lat/lon
+coordinates and then consider migration in a spatial context. We will
+start by seeding infections in just one deme in the lower left
+corner:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># define lat/lon coordinates of demes</span></span>
+<span><span class="va">deme_coords</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tidyr.tidyverse.org/reference/expand_grid.html" class="external-link">expand_grid</a></span><span class="op">(</span>lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">5.44</span>, <span class="op">-</span><span class="fl">4.52</span>, l <span class="op">=</span> <span class="fl">11</span><span class="op">)</span>,</span>
+<span>                           lon <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">15.25</span>, <span class="fl">16.50</span>, l <span class="op">=</span> <span class="fl">11</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">n_demes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">deme_coords</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># add deme-specific properties</span></span>
+<span><span class="va">deme_coords</span> <span class="op">&lt;-</span> <span class="va">deme_coords</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>deme <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="va">n_demes</span>,</span>
+<span>                <span class="co">#M = round((lon - 15)*800), # mosquito population size increasing from left to right</span></span>
+<span>                M <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="op">(</span><span class="fl">18</span> <span class="op">-</span> <span class="va">lon</span><span class="op">)</span><span class="op">*</span><span class="fl">300</span><span class="op">)</span>, <span class="co"># mosquito population size increasing from left to right</span></span>
+<span>                seed_infections <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">deme</span> <span class="op">==</span> <span class="fl">1</span>, <span class="fl">50</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">deme_coords</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 5</span></span></span>
+<span><span class="co">#&gt;     lat   lon  deme     M seed_infections</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> -<span style="color: #BB0000;">5.44</span>  15.2     1   825              50</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> -<span style="color: #BB0000;">5.44</span>  15.4     2   788               0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> -<span style="color: #BB0000;">5.44</span>  15.5     3   750               0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> -<span style="color: #BB0000;">5.44</span>  15.6     4   712               0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> -<span style="color: #BB0000;">5.44</span>  15.8     5   675               0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> -<span style="color: #BB0000;">5.44</span>  15.9     6   638               0</span></span></code></pre></div>
+<p>Next we need to make a migration matrix. We first calculate the
+distance between all demes, and then we will create a small amount of
+migration between adjacent demes only. The migration matrix must sum to
+one over rows to be accepted by the program:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># define migration matrix based on distance</span></span>
+<span><span class="va">spatial_dist</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_spatial_distance.html">get_spatial_distance</a></span><span class="op">(</span>lat <span class="op">=</span> <span class="va">deme_coords</span><span class="op">$</span><span class="va">lat</span>,</span>
+<span>                                     lon <span class="op">=</span> <span class="va">deme_coords</span><span class="op">$</span><span class="va">lon</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">mig_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">spatial_dist</span> <span class="op">&lt;</span> <span class="fl">20</span>, <span class="fl">0.001</span>, <span class="fl">0</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># ensure migration probabilities sum to 1 over rows</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">mig_matrix</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">mig_matrix</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">mig_matrix</span><span class="op">)</span></span></code></pre></div>
+<p>Next we need to define our sampling strategy. We will sample 100
+individuals from a subset of demes after a full 10 years of simulation
+(genetic patterns take a long time to settle down, much longer than
+prevalence for example). For convenience we produce the sampling
+data.frame directly from the <code>deme_coords</code> data.frame defined
+above, although only the columns <code>deme</code>, <code>time</code>
+and <code>n</code> will be used sampling.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># define output dataframe</span></span>
+<span><span class="va">sample_df</span> <span class="op">&lt;-</span> <span class="va">deme_coords</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">deme</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">13</span>, <span class="fl">26</span>, <span class="fl">35</span>, <span class="fl">109</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>time <span class="op">=</span> <span class="fl">10</span> <span class="op">*</span> <span class="fl">365</span>,</span>
+<span>                n <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">sample_df</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 7</span></span></span>
+<span><span class="co">#&gt;     lat   lon  deme     M seed_infections  time     n</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> -<span style="color: #BB0000;">5.35</span>  15.4    13   788               0  <span style="text-decoration: underline;">3</span>650   100</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> -<span style="color: #BB0000;">5.26</span>  15.6    26   712               0  <span style="text-decoration: underline;">3</span>650   100</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> -<span style="color: #BB0000;">5.16</span>  15.4    35   788               0  <span style="text-decoration: underline;">3</span>650   100</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> -<span style="color: #BB0000;">4.61</span>  16.4   109   488               0  <span style="text-decoration: underline;">3</span>650   100</span></span></code></pre></div>
+<p>Now we can run the simulation, using the values in
+<code>deme_coords</code> to specify the mosquito population size and the
+seeding infections:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># simulate</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">sim_mig</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sim_falciparum.html">sim_falciparum</a></span><span class="op">(</span>H <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>                          M <span class="op">=</span> <span class="va">deme_coords</span><span class="op">$</span><span class="va">M</span>,</span>
+<span>                          seed_infections <span class="op">=</span> <span class="va">deme_coords</span><span class="op">$</span><span class="va">seed_infections</span>,</span>
+<span>                          mig_matrix <span class="op">=</span> <span class="va">mig_matrix</span>,</span>
+<span>                          L <span class="op">=</span> <span class="fl">24</span>,</span>
+<span>                          sample_dataframe <span class="op">=</span> <span class="va">sample_df</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Running simulation</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; simulation completed in 3.59346 seconds</span></span>
+<span><span class="co">#&gt; processing output</span></span></code></pre></div>
+<p>We can now produce a simple plot of prevalence over time, broken down
+by deme. We can see how the wave of infection swept through the demes as
+infected hosts migrated through the space:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># basic plot of prevalence in "I" state (infected)</span></span>
+<span><span class="va">sim_mig</span><span class="op">$</span><span class="va">daily_values</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">time</span> <span class="op">&lt;</span> <span class="fl">365</span> <span class="op">*</span> <span class="fl">10</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time</span>, y <span class="op">=</span> <span class="fl">100</span> <span class="op">*</span> <span class="va">I</span> <span class="op">/</span> <span class="fl">100</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">deme</span><span class="op">)</span><span class="op">)</span>, show.legend <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Prevalence (%)"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="tutorial_movement_files/figure-html/unnamed-chunk-7-1.png" width="70%" height="70%"></p>
+<p>We can visualise this spatially by filtering to a certain time point
+and then producing a raster plot. For example, here is the prevalence
+map 2 years into the simulation:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># subset daily output to specific timepoint and merge back with deme properties</span></span>
+<span><span class="va">daily_values_sub</span> <span class="op">&lt;-</span> <span class="va">sim_mig</span><span class="op">$</span><span class="va">daily_values</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">time</span> <span class="op">==</span> <span class="fl">2</span><span class="op">*</span><span class="fl">365</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">deme_coords</span>, by <span class="op">=</span> <span class="st">"deme"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># produce raster plot</span></span>
+<span><span class="va">daily_values_sub</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">lon</span>, y <span class="op">=</span> <span class="va">lat</span>, fill <span class="op">=</span> <span class="va">I</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>expand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>expand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"magma"</span>, name <span class="op">=</span> <span class="st">"Prevalence (%)"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="tutorial_movement_files/figure-html/unnamed-chunk-8-1.png" width="70%" height="70%"></p>
+<p>We can see that 2 years into our simulation the wave of infection had
+still not quite reached the top of our domain. Prevalence also appears
+to be higher towards the left of the domain, a consequence of assuming
+increasing mosquito population size from right to left. We can produce
+the same plot at 10 years into simulation:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># subset daily output to specific timepoint and merge back with deme properties</span></span>
+<span><span class="va">daily_values_sub</span> <span class="op">&lt;-</span> <span class="va">sim_mig</span><span class="op">$</span><span class="va">daily_values</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">time</span> <span class="op">==</span> <span class="fl">10</span><span class="op">*</span><span class="fl">365</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">deme_coords</span>, by <span class="op">=</span> <span class="st">"deme"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># produce raster plot</span></span>
+<span><span class="va">daily_values_sub</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">lon</span>, y <span class="op">=</span> <span class="va">lat</span>, fill <span class="op">=</span> <span class="va">I</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>expand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>expand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"magma"</span>, name <span class="op">=</span> <span class="st">"Prevalence (%)"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="tutorial_movement_files/figure-html/unnamed-chunk-9-1.png" width="70%" height="70%"></p>
+<p>Now prevalence appears to be roughly at equilibrium, with higher
+transmission along the left of the domain.</p>
+</div>
+<div class="section level2">
+<h2 id="genetic-distance-vs--geographic-distance">Genetic distance vs. geographic distance<a class="anchor" aria-label="anchor" href="#genetic-distance-vs--geographic-distance"></a>
+</h2>
+<p>Returning to our genetic sample, we asked the program to draw 100
+individuals at random from four demes on the final day of simulation. We
+can calculate the pairwise genetic identity between all pairs of
+individuals in this sample using the function. Genetic identity is
+calculated as the proportion of identical genetic values over all
+possible pairs of haplotypes compared between two individuals. This
+means two individuals will only have identity = 1 if they are monoclonal
+and matching at every locus. It follows that an individual will be less
+than perfectly identical with itself if it carries multiple distinct
+haplotypes.</p>
+<p>As long as genetic values represent ancestry, as they do in this
+simulation, what we are really measuring here is average identity by
+descent (IBD) between haplotypes. If genetic values were converted into
+alleles prior to running this function then we would be measuring
+identity by state (IBS).</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># get pairwise genetic identity between all individuals</span></span>
+<span><span class="va">indlevel_identity</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_identity_matrix.html">get_identity_matrix</a></span><span class="op">(</span><span class="va">sim_mig</span>, deme_level <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># get into long form dataframe</span></span>
+<span><span class="va">n_pos</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">indlevel_identity</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">df_indlevel_identity</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tidyr.tidyverse.org/reference/expand_grid.html" class="external-link">expand_grid</a></span><span class="op">(</span>samp1 <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="va">n_pos</span>, samp2 <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="va">n_pos</span><span class="op">)</span></span>
+<span><span class="va">df_indlevel_identity</span><span class="op">$</span><span class="va">value</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">indlevel_identity</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># plot pairwise matrix</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df_indlevel_identity</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">samp1</span>, y <span class="op">=</span> <span class="va">samp2</span>, fill <span class="op">=</span> <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"magma"</span>, name <span class="op">=</span> <span class="st">"Identity by descent"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="tutorial_movement_files/figure-html/unnamed-chunk-10-1.png" width="70%" height="70%"></p>
+<p>We can also use the same function to summarise genetic identity at
+the deme level rather than the individual level through the
+<code>deme_level = TRUE</code> argument:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># get pairwise genetic identity between all demes</span></span>
+<span><span class="va">deme_level_identity</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_identity_matrix.html">get_identity_matrix</a></span><span class="op">(</span><span class="va">sim_mig</span>, deme_level <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># get into long form data.frame</span></span>
+<span><span class="va">n_deme</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">deme_level_identity</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">df_deme_level_identity</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tidyr.tidyverse.org/reference/expand_grid.html" class="external-link">expand_grid</a></span><span class="op">(</span>deme1 <span class="op">=</span> <span class="va">sample_df</span><span class="op">$</span><span class="va">deme</span>, deme2 <span class="op">=</span> <span class="va">sample_df</span><span class="op">$</span><span class="va">deme</span><span class="op">)</span></span>
+<span><span class="va">df_deme_level_identity</span><span class="op">$</span><span class="va">IBD</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">deme_level_identity</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># plot pairwise matrix</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df_deme_level_identity</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">deme1</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">deme2</span><span class="op">)</span>, fill <span class="op">=</span> <span class="va">IBD</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"deme1"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"deme2"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"magma"</span>, name <span class="op">=</span> <span class="st">"Identity by descent"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="tutorial_movement_files/figure-html/unnamed-chunk-11-1.png" width="40%" height="40%"></p>
+<p>We can see that some demes are more closely related than others. We
+can visualise this spatially by drawing edges between our sampled demes,
+with edge thickness/colour proportional to IBD:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># append deme coordinates</span></span>
+<span><span class="va">sample_df_simple</span> <span class="op">&lt;-</span> <span class="va">sample_df</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">lat</span>, <span class="va">lon</span>, <span class="va">deme</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">df_deme_level_identity</span> <span class="op">&lt;-</span> <span class="va">df_deme_level_identity</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>deme <span class="op">=</span> <span class="va">deme1</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">sample_df_simple</span>, by <span class="op">=</span> <span class="st">"deme"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>deme1 <span class="op">=</span> <span class="va">deme</span>,</span>
+<span>                deme <span class="op">=</span> <span class="va">deme2</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">sample_df_simple</span>, by <span class="op">=</span> <span class="st">"deme"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>deme2 <span class="op">=</span> <span class="va">deme</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># plot pairwise IBD</span></span>
+<span><span class="va">df_deme_level_identity</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">deme1</span> <span class="op">!=</span> <span class="va">deme2</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_segment.html" class="external-link">geom_segment</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">lon.x</span>, y <span class="op">=</span> <span class="va">lat.x</span>, xend <span class="op">=</span> <span class="va">lon.y</span>, yend <span class="op">=</span> <span class="va">lat.y</span>, size <span class="op">=</span> <span class="va">IBD</span>, col <span class="op">=</span> <span class="va">IBD</span><span class="op">)</span>,</span>
+<span>               lineend <span class="op">=</span> <span class="st">"round"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"Lon"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Lat"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>size <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use `linewidth` instead.</span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">generated.</span></span></span></code></pre></div>
+<p><img src="tutorial_movement_files/figure-html/unnamed-chunk-12-1.png" width="70%" height="70%"></p>
+<p>On average we would expect to see that demes closer together would be
+more highly related, although this will also be influenced in complex
+ways by relative transmission intensity.</p>
+</div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
 
-      </div>
+        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
+    </nav>
+</div>
 
 </div>
 

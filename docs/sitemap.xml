@@ -40,7 +40,13 @@
     <loc>/reference/get_identity_matrix.html</loc>
   </url>
   <url>
+    <loc>/reference/get_spatial_distance.html</loc>
+  </url>
+  <url>
     <loc>/reference/index.html</loc>
+  </url>
+  <url>
+    <loc>/reference/lonlat_to_bearing.html</loc>
   </url>
   <url>
     <loc>/reference/plasmosim_file.html</loc>
