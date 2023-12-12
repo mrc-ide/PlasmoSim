@@ -14,8 +14,6 @@ navbar:
           href: articles/tutorial_basic.html
         - text: Space and human movement
           href: articles/tutorial_movement.html
-        - text: Pairwise relatedness
-          href: articles/tutorial_relatedness.html
     - text: Functions
       href: reference/index.html
 

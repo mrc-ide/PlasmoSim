@@ -360,7 +360,7 @@ get_identity_matrix <- function(sim_output, deme_level = FALSE) {
     # set row and column names
     colnames(ret_mat) <-  rownames(ret_mat) <- x$sample_ID
     
-    ret_mat
+    return(ret_mat)
   }, tsplit, SIMPLIFY = FALSE)
   
   # if not summarising at deme level then return as is
