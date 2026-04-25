@@ -26,7 +26,7 @@ PlasmoSim returns two types of output:
 This tutorial gives example of both outputs, and shows basic visualisation and interpretation functions.
 
 Load necessary packages:
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library(PlasmoSim)
 library(tidyverse)
 ```
@@ -87,7 +87,8 @@ The first few columns tell us when and where (i.e. which deme) sampling occurred
 ```{r}
 # print raw genetic data
 sim1$indlevel |>
-  filter(sample_ID == 394) |>
+  filter(positive) |>
+  head(1) |>
   pull(haplotypes)
 ```
 
@@ -96,7 +97,8 @@ Returning to the table, the final column gives the `haplo_ID`. This is a hash of
 ```{r}
 # print haplo_ID
 sim1$indlevel |>
-  filter(sample_ID == 394) |>
+  filter(positive) |>
+  head(1) |>
   pull(haplo_ID)
 ```
 
@@ -107,16 +109,6 @@ But what do the values in the `haplotypes` matrix actually mean? Although we hav
 
 Note that two samples having the value 68 does not imply that they are both *direct* descendants of the 68th seed infection. Rather, it implies that these samples have a common ancestor some time between the start of the simulation and the present day, and *this common ancestor* is descended from the 68th seed infection. It is much more likely that the common ancestor is much more recent than going all the way back to the start of the simulation.
 
-Look again at the `haplotypes` matrix for this poly-clonally infected host. Notice that each row contains blocks of the values 68 and 42:
-
-```{r}
-# print raw genetic data
-sim1$indlevel |>
-  filter(sample_ID == 394) |>
-  pull(haplotypes)
-```
-
-This pattern is due to recombination. We could use this matrix to identify blocks of IBD within a sample, or compare this matrix to another to explore IBD between samples.
 
 
 

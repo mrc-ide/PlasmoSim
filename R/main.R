@@ -28,7 +28,9 @@ check_PlasmoSim_loaded <- function() {
 #' @param g lag time between human blood-stage infection and production of
 #'   gametocytes.
 #' @param prob_infection probability a human becomes infected after being bitten
-#'   by an infected mosquito.
+#'   by an infected mosquito. Can be a scalar or a vector. If a vector then each
+#'   value applies over subsequent infections, creating possibility of an
+#'   exposure-driven immunity model.
 #' @param duration_infection vector specifying probability distribution of time
 #'   (in days) of a malaria episode.
 #' @param infectivity probability a mosquito becomes infected after biting an
@@ -75,6 +77,7 @@ check_PlasmoSim_loaded <- function() {
 #' @importFrom stats dgeom setNames optim
 #' @importFrom rlang .data
 #' @importFrom knitrProgressBar progress_estimated update_progress
+#' @importFrom lamW lambertW0
 #' @export
 
 sim_falciparum <- function(a = 0.3,
@@ -152,17 +155,14 @@ sim_falciparum <- function(a = 0.3,
   
   # solve zero-truncated Poisson distribution for lambda_oocysts parameter to
   # match user-specified mean
-  lambda_loss <- function(lambda, mu) {
-    abs(lambda / (1 - exp(-lambda)) - mu)
-  }
-  lambda_oocysts <- optim(1.0, lambda_loss, method = "Brent", lower = 0.0, upper = 11.0, mu = mean_oocysts)$par
+  lambda_oocysts <- mean_oocysts + lamW::lambertW0(-mean_oocysts * exp(-mean_oocysts))
   assert_non_NA(lambda_oocysts)
   assert_non_null(lambda_oocysts)
   assert_le(lambda_oocysts, 10, message = "mean_oocysts too high")
   
   # solve zero-truncated Poisson distribution for lambda_products parameter to
   # match user-specified mean
-  lambda_products <- optim(1.0, lambda_loss, method = "Brent", lower = 0.0, upper = 101.0, mu = mean_products)$par
+  lambda_products <- mean_oocysts + lamW::lambertW0(-mean_products * exp(-mean_products))
   assert_non_NA(lambda_products)
   assert_non_null(lambda_products)
   assert_le(lambda_products, 100, message = "mean_products too high")
