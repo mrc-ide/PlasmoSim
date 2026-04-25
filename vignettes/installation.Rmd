@@ -17,7 +17,21 @@ install.packages('PlasmoSim', repos = c('https://plasmogenepi.r-universe.dev', '
 
 However, this may not work for some chips, in which case backup instructions are presented below.
 
-## Installing Rcpp
+Assuming everything installed correctly, we need to load the package:
+
+```{r}
+library(PlasmoSim)
+```
+
+You can test that the package is loaded and working by running the following command, which should produce this output:
+
+```{r}
+check_PlasmoSim_loaded()
+```
+
+## Installing Manually
+
+### Installing Rcpp
 
 `PlasmoSim` relies on the [Rcpp](https://cran.r-project.org/web/packages/Rcpp/index.html) package, which requires the following OS-specific steps:
 
@@ -33,7 +47,7 @@ However, this may not work for some chips, in which case backup instructions are
         sudo apt-get install r-base-dev texlive-full
         ```
 
-## Installing and loading `PlasmoSim`
+### Installing and loading `PlasmoSim`
 
 Next, in R, ensure that you have the [devtools](https://www.rstudio.com/products/rpackages/devtools/) package installed by running
 

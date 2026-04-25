@@ -1,7 +1,7 @@
 Package: PlasmoSim
 Type: Package
 Title: Simulation of Plasmodium genetic data
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: as.person(c(
     "Bob Verity <r.verity@imperial.ac.uk> [aut, cre]"
   ))
@@ -10,7 +10,7 @@ Description: A basic Plasmodium simulator. Contains functions to simulate epidem
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 LinkingTo: 
     Rcpp
 Imports: 
@@ -18,7 +18,8 @@ Imports:
     dplyr,
     openssl,
     rlang,
-    knitrProgressBar
+    knitrProgressBar,
+    lamW
 SystemRequirements: C++11
 BugReports: https://github.com/mrc-ide/PlasmoSim/issues
 Suggests: 
