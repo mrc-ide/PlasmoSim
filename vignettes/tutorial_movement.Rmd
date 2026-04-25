@@ -27,7 +27,7 @@ library(tidyverse)
 
 ## Defining the migration matrix and simulating with migration
 
-PlasmoSim incorporates migration of hosts between demes using a migration matrix. We have to be careful when simulating stochastic movement of people between demes, as if we simply give each person a random chance of moving from one deme to another taken from this migration matrix then population sizes will drift up and down at random and eventually we will see demes emptying entirely. To get around this we do matched migration, meaning people swap places between demes rather than moving independently. This satisfies the migration matrix, while also ensuring that population sizes stay constant throughout the simulation. We do not model mosquito movement in this version of the package.
+PlasmoSim incorporates migration of hosts between demes using a migration matrix. We have to be careful when simulating stochastic movement of people between demes, as if we simply give each person a random chance of moving from one deme to another then population sizes will drift up and down at random and eventually we will see demes emptying entirely. To get around this we do matched migration, meaning people swap places between demes rather than moving independently. This satisfies the migration matrix, while also ensuring that population sizes stay constant throughout the simulation. We do not model mosquito movement in this version of the package.
 
 We start by creating a grid of demes, and for each deme specifying its properties, such as the mosquito population size and the number of seeding infections. In our case we will make the density of mosquitoes (and hence the EIR) increase from left to right of the domain. Note that human population sizes must be the same for all demes due to the migration constraint described above.
 
@@ -49,7 +49,7 @@ deme_coords <- deme_coords |>
 head(deme_coords)
 ```
 
-Next we need to make a migration matrix. We first calculate the distance between all demes, and then we will create a small amount of migration between adjacent demes only. The migration matrix must sum to one over rows to be accepted by the program:
+Next we need to make a migration matrix. We first calculate the distance between all demes, and then we will specify a small amount of migration between adjacent demes only. The migration matrix must sum to one over rows to be accepted by the program:
 
 ```{r}
 # define migration matrix based on distance
@@ -63,7 +63,7 @@ diag(mig_matrix) <- 0
 diag(mig_matrix) <- 1 - rowSums(mig_matrix)
 ```
 
-Next we need to define our sampling strategy. We will sample 100 individuals from a subset of demes after a full 10 years of simulation (genetic patterns take a long time to settle down, much longer than prevalence for example). For convenience we produce the sampling data.frame directly from the `deme_coords` data.frame defined above, although only the columns `deme`, `time` and `n` will be used sampling.
+Next, we need to define our sampling strategy. We will sample 100 individuals from a subset of demes after a full 10 years of simulation (genetic patterns take a long time to settle down, much longer than prevalence for example). For convenience we produce the sampling data frame directly from the `deme_coords` data frame defined above, although only the columns `deme`, `time` and `n` will be used sampling.
 
 ```{r}
 # define output dataframe
@@ -194,10 +194,10 @@ df_deme_level_identity <- df_deme_level_identity |>
 df_deme_level_identity |>
   dplyr::filter(deme1 != deme2) |>
   ggplot() + theme_bw() +
-  geom_segment(aes(x = lon.x, y = lat.x, xend = lon.y, yend = lat.y, size = IBD, col = IBD),
+  geom_segment(aes(x = lon.x, y = lat.x, xend = lon.y, yend = lat.y, linewidth = IBD, col = IBD),
                lineend = "round") +
   xlab("Lon") + ylab("Lat") +
   guides(size = "none")
 ```
 
-On average we would expect to see that demes closer together would be more highly related, although this will also be influenced in complex ways by relative transmission intensity.
+On average, we would expect to see that demes closer together would be more highly related, although this will also be influenced in complex ways by relative transmission intensity.

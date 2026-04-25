@@ -2,10 +2,22 @@
 % Please edit documentation in R/PlasmoSim.R
 \docType{package}
 \name{PlasmoSim}
+\alias{PlasmoSim-package}
 \alias{PlasmoSim}
 \title{PlasmoSim}
 \description{
 A basic Plasmodium simulator. Contains functions to simulate
   epidemiological and genetic data from a simple model of Plasmodium
   falciparum transmission.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item Report bugs at \url{https://github.com/mrc-ide/PlasmoSim/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Bob Verity \email{r.verity@imperial.ac.uk}
+
 }

@@ -47,7 +47,9 @@ becoming infectious in a mosquito.}
 gametocytes.}
 
 \item{prob_infection}{probability a human becomes infected after being bitten
-by an infected mosquito.}
+by an infected mosquito. Can be a scalar or a vector. If a vector then each
+value applies over subsequent infections, creating possibility of an
+exposure-driven immunity model.}
 
 \item{duration_infection}{vector specifying probability distribution of time
 (in days) of a malaria episode.}

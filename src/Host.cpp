@@ -89,7 +89,7 @@ void Host::draw_starting_age() {
   // dying this year is therefore p = 1 - exp(-r). We know p from life table,
   // from which we can derive r = -log(1-p). If we are already a proportion x
   // through this year, then the probability of dying in the remaining time is
-  // Pr(die) = 1 - exp(-r(1-x)). Sustituting in r and simplifying we get Pr(die)
+  // Pr(die) = 1 - exp(-r(1-x)). Substituting in r and simplifying we get Pr(die)
   // = 1 - (1-p)^(1-x). In code, x can never equal exactly 1 as there must
   // always be at least one day remaining in the current year. Notice that as x
   // approaches 1 the chance of dying this year tends to 0, UNLESS p = 1 in

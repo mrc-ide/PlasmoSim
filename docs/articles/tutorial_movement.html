@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Space and human movement • PlasmoSim</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PlasmoSim</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.1</span>
       </span>
     </div>
 
@@ -108,14 +108,13 @@ visualising output.</li>
 <p>PlasmoSim incorporates migration of hosts between demes using a
 migration matrix. We have to be careful when simulating stochastic
 movement of people between demes, as if we simply give each person a
-random chance of moving from one deme to another taken from this
-migration matrix then population sizes will drift up and down at random
-and eventually we will see demes emptying entirely. To get around this
-we do matched migration, meaning people swap places between demes rather
-than moving independently. This satisfies the migration matrix, while
-also ensuring that population sizes stay constant throughout the
-simulation. We do not model mosquito movement in this version of the
-package.</p>
+random chance of moving from one deme to another then population sizes
+will drift up and down at random and eventually we will see demes
+emptying entirely. To get around this we do matched migration, meaning
+people swap places between demes rather than moving independently. This
+satisfies the migration matrix, while also ensuring that population
+sizes stay constant throughout the simulation. We do not model mosquito
+movement in this version of the package.</p>
 <p>We start by creating a grid of demes, and for each deme specifying
 its properties, such as the mosquito population size and the number of
 seeding infections. In our case we will make the density of mosquitoes
@@ -152,7 +151,7 @@ corner:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> -<span style="color: #BB0000;">5.44</span>  15.8     5   675               0</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> -<span style="color: #BB0000;">5.44</span>  15.9     6   638               0</span></span></code></pre></div>
 <p>Next we need to make a migration matrix. We first calculate the
-distance between all demes, and then we will create a small amount of
+distance between all demes, and then we will specify a small amount of
 migration between adjacent demes only. The migration matrix must sum to
 one over rows to be accepted by the program:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -165,11 +164,11 @@ one over rows to be accepted by the program:</p>
 <span><span class="co"># ensure migration probabilities sum to 1 over rows</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">mig_matrix</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">mig_matrix</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">mig_matrix</span><span class="op">)</span></span></code></pre></div>
-<p>Next we need to define our sampling strategy. We will sample 100
+<p>Next, we need to define our sampling strategy. We will sample 100
 individuals from a subset of demes after a full 10 years of simulation
 (genetic patterns take a long time to settle down, much longer than
-prevalence for example). For convenience we produce the sampling
-data.frame directly from the <code>deme_coords</code> data.frame defined
+prevalence for example). For convenience we produce the sampling data
+frame directly from the <code>deme_coords</code> data frame defined
 above, although only the columns <code>deme</code>, <code>time</code>
 and <code>n</code> will be used sampling.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
@@ -201,7 +200,7 @@ seeding infections:</p>
 <span>                          sample_dataframe <span class="op">=</span> <span class="va">sample_df</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running simulation</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; simulation completed in 3.59346 seconds</span></span>
+<span><span class="co">#&gt; simulation completed in 3.52933 seconds</span></span>
 <span><span class="co">#&gt; processing output</span></span></code></pre></div>
 <p>We can now produce a simple plot of prevalence over time, broken down
 by deme. We can see how the wave of infection swept through the demes as
@@ -323,18 +322,13 @@ with edge thickness/colour proportional to IBD:</p>
 <span><span class="va">df_deme_level_identity</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">deme1</span> <span class="op">!=</span> <span class="va">deme2</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_segment.html" class="external-link">geom_segment</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">lon.x</span>, y <span class="op">=</span> <span class="va">lat.x</span>, xend <span class="op">=</span> <span class="va">lon.y</span>, yend <span class="op">=</span> <span class="va">lat.y</span>, size <span class="op">=</span> <span class="va">IBD</span>, col <span class="op">=</span> <span class="va">IBD</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_segment.html" class="external-link">geom_segment</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">lon.x</span>, y <span class="op">=</span> <span class="va">lat.x</span>, xend <span class="op">=</span> <span class="va">lon.y</span>, yend <span class="op">=</span> <span class="va">lat.y</span>, linewidth <span class="op">=</span> <span class="va">IBD</span>, col <span class="op">=</span> <span class="va">IBD</span><span class="op">)</span>,</span>
 <span>               lineend <span class="op">=</span> <span class="st">"round"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"Lon"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Lat"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>size <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use `linewidth` instead.</span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">generated.</span></span></span></code></pre></div>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>size <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="tutorial_movement_files/figure-html/unnamed-chunk-12-1.png" width="70%" height="70%"></p>
-<p>On average we would expect to see that demes closer together would be
-more highly related, although this will also be influenced in complex
+<p>On average, we would expect to see that demes closer together would
+be more highly related, although this will also be influenced in complex
 ways by relative transmission intensity.</p>
 </div>
   </div>
@@ -356,7 +350,7 @@ ways by relative transmission intensity.</p>
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
 </div>
 
       </footer>
